@@ -228,26 +228,31 @@ void ThreadContext::_doCall(uint64_t addr, const CallArgs &args)
   VEO_TRACE(this, "%s(%p, ...)", __func__, (void *)addr);
   VEO_DEBUG(this, "VE function = %p", (void *)addr);
   ve_set_user_reg(this->os_handle, SR12, addr, ~0UL);
-  
-  if (args.nargs <= VEO_MAX_NUM_ARGS) {
-    // maximum 8 arguments are passed in registers
-    for (int i = 0; i < std::min(args.nargs, 8); i++)
-      ve_set_user_reg(this->os_handle, SR00 + i, args.arguments[i], ~0UL);
-    // when more than 8 args: pass on stack
-    if (args.nargs > 8) {
-      // stack length = (2 + RSA + args) * 8 bytes
-      int slen = 2 + 20 + args.nargs;
-      int64_t stack[slen];
-      for (int i = 0; i < args.nargs; i++)
-        stack[22 + i] = args.arguments[i];
-      if (this->proc->writeMem(this->ve_sp - sizeof(stack),
-                               (void *)stack, sizeof(stack)))
-        throw VEOException("stack transfer failed.");
-      // and now set the stack pointer
-      ve_set_user_reg(this->os_handle, SR11, this->ve_sp - sizeof(stack), ~0UL);
+
+  auto nargs = args.numArgs();
+  uint64_t locals_start = this->ve_sp - 8 * ((args.locals.size() + 7) / 8);
+  // maximum 8 arguments are passed in registers
+  for (int i = 0; i < std::min(nargs, 8); i++)
+    ve_set_user_reg(this->os_handle, SR00 + i, args.get(locals_start, i), ~0UL);
+  // when more than 8 args or local variables: pass on stack
+  if (nargs > 8 || args.locals.size() > 0) {
+    // stack length = (2 + RSA + args + (locals/8)) * 8 bytes
+    int64_t stack[22 + nargs + ((args.locals.size() + 7) / 8)];
+    // locals are local variables passed on stack and referenced by arguments
+    if (args.locals.size() > 0) {
+      VEO_DEBUG(this, "locals_start = %p", locals_start);
+      std::memcpy((void *)&stack[22 + nargs], args.locals.data(), args.locals.size());
     }
+    for (int i = 0; i < nargs; i++)
+      stack[22 + i] = args.get(locals_start, i);
+    VEO_DEBUG(this, "stack transfer to %p", this->ve_sp - sizeof(stack));
+    if (this->proc->writeMem(this->ve_sp - sizeof(stack),
+                             (void *)stack, sizeof(stack)))
+      throw VEOException("stack transfer failed.");
+    // and now set the stack pointer
+    ve_set_user_reg(this->os_handle, SR11, this->ve_sp - sizeof(stack), ~0UL);
   }
-  this->_unBlock(args.arguments[0]);
+  this->_unBlock(nargs > 0 ? args.get(locals_start, 0) : 0UL);
 }
 
 /**

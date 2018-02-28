@@ -22,9 +22,9 @@ int main()
 	printf("VEO context1 = %p\n", ctx1);
 
         uint64_t reqs[2];
-	struct veo_call_args arg;
-	arg.arguments[0] = 5;
-	reqs[0] = veo_call_async(ctx1, sym, &arg);
+	struct veo_args *arg = veo_args_alloc();
+	veo_args_set_i64(arg, 0, 5);
+	reqs[0] = veo_call_async(ctx1, sym, arg);
 	printf("VEO request ID1 = 0x%lx\n", reqs[0]);
 
 	uint64_t retval;
@@ -33,6 +33,7 @@ int main()
 		printf("sleep 1...\n");
 		sleep(1);
 	}
+	veo_args_free(arg);
 	
 	int close_status = veo_context_close(ctx1);
 	printf("close status 1 = %d\n", close_status);

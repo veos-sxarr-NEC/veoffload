@@ -16,9 +16,9 @@ main()
 
   struct veo_thr_ctxt *ctx = veo_context_open(proc);
   printf("VEO context = %p\n", ctx);
-  struct veo_call_args arg;
-  arg.arguments[0] = 42;
-  uint64_t id = veo_call_async(ctx, sym, &arg);
+  struct veo_args *arg = veo_args_alloc();
+  veo_args_set_i64(arg, 0, 42);
+  uint64_t id = veo_call_async(ctx, sym, arg);
   printf("VEO request ID = 0x%lx\n", id);
   uint64_t buffer = 0;
   uint64_t bufptr = veo_get_sym(proc, handle, "buffer");
@@ -30,8 +30,9 @@ main()
   ret = veo_write_mem(proc, bufptr, &buffer, sizeof(buffer));
   printf("veo_write_mem() returned %d\n", ret);
   uint64_t sym2 = veo_get_sym(proc, handle, "print_buffer");
-  uint64_t id2 = veo_call_async(ctx, sym2, &arg);
+  uint64_t id2 = veo_call_async(ctx, sym2, arg);
   uint64_t retval;
+  veo_args_free(arg);
   ret = veo_call_wait_result(ctx, id, &retval);
   printf("0x%lx: %d, %lu\n", id, ret, retval);
   ret = veo_call_wait_result(ctx, id2, &retval);

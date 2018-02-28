@@ -7,6 +7,7 @@ libveo_la_SOURCES = $(common_headers) \
                     log.hpp log.cpp loader_veo.c \
                     api.cpp VEOException.hpp \
                     Command.hpp Command.cpp \
+                    CallArgs.hpp CallArgs.cpp \
                     ProcHandle.cpp ProcHandle.hpp \
                     ThreadContext.cpp ThreadContext.hpp
 

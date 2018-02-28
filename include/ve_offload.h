@@ -52,11 +52,7 @@ enum veo_command_state {
 };
 
 
-struct veo_call_args {
-  uint64_t arguments[VEO_MAX_NUM_ARGS];
-	int nargs;
-};
-
+struct veo_args;
 struct veo_proc_handle;
 struct veo_thr_ctxt;
 
@@ -69,8 +65,18 @@ uint64_t veo_get_sym(struct veo_proc_handle *, uint64_t, const char *);
 struct veo_thr_ctxt *veo_context_open(struct veo_proc_handle *);
 int veo_context_close(struct veo_thr_ctxt *);
 int veo_get_context_state(struct veo_thr_ctxt *);
+
+struct veo_args *veo_args_alloc(void);
+int veo_args_set_u64(struct veo_args *, int, uint64_t);
+int veo_args_set_i64(struct veo_args *, int, int64_t);
+int veo_args_set_float(struct veo_args *, int, float);
+int veo_args_set_double(struct veo_args *, int, double);
+int veo_args_set_stack(struct veo_args *, int, char *, size_t);
+void veo_args_clear(struct veo_args *);
+void veo_args_free(struct veo_args *);
+
 uint64_t veo_call_async(struct veo_thr_ctxt *, uint64_t,
-                        const struct veo_call_args *);
+                        const struct veo_args *);
 int veo_call_peek_result(struct veo_thr_ctxt *, uint64_t, uint64_t *);
 int veo_call_wait_result(struct veo_thr_ctxt *, uint64_t, uint64_t *);
 int veo_alloc_mem(struct veo_proc_handle *, uint64_t *, const size_t);

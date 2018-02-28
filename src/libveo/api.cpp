@@ -12,6 +12,10 @@
 namespace veo {
 namespace api {
 // cast helper from C API to C++ implementation
+CallArgs *CallArgsFromC(veo_args *a)
+{
+  return reinterpret_cast<CallArgs *>(a);
+}
 ProcHandle *ProcHandleFromC(veo_proc_handle *h)
 {
   return reinterpret_cast<ProcHandle *>(h);
@@ -23,6 +27,7 @@ ThreadContext *ThreadContextFromC(veo_thr_ctxt *c)
 } // namespace veo::api
 } // namespace veo
 
+using veo::api::CallArgsFromC;
 using veo::api::ProcHandleFromC;
 using veo::api::ThreadContextFromC;
 using veo::VEOException;
@@ -158,6 +163,83 @@ int veo_get_context_state(veo_thr_ctxt *ctx)
   return ThreadContextFromC(ctx)->getState();
 }
 
+veo_args *veo_args_alloc(void)
+{
+  try {
+    auto rv = new veo::CallArgs();
+    return rv->toCHandle();
+  } catch (VEOException &e) {
+    VEO_ERROR(nullptr, "failed to create CallArgs: %s", e.what());
+    errno = e.err();
+    return NULL;
+  }
+}
+
+int veo_args_set_u64(veo_args *ca, int argnum, uint64_t val)
+{
+  try {
+    CallArgsFromC(ca)->set(argnum, val);
+    return 0;
+  } catch (VEOException &e) {
+    VEO_ERROR(nullptr, "failed to set CallArgs(%d): %s", argnum, e.what());
+    return -1;
+  }
+}
+
+int veo_args_set_i64(veo_args *ca, int argnum, int64_t val)
+{
+  try {
+    CallArgsFromC(ca)->set(argnum, val);
+    return 0;
+  } catch (VEOException &e) {
+    VEO_ERROR(nullptr, "failed to set CallArgs(%d): %s", argnum, e.what());
+    return -1;
+  }
+}
+
+int veo_args_set_float(veo_args *ca, int argnum, float val)
+{
+  try {
+    CallArgsFromC(ca)->set(argnum, val);
+    return 0;
+  } catch (VEOException &e) {
+    VEO_ERROR(nullptr, "failed to set CallArgs(%d): %s", argnum, e.what());
+    return -1;
+  }
+}
+
+int veo_args_set_double(veo_args *ca, int argnum, double val)
+{
+  try {
+    CallArgsFromC(ca)->set(argnum, val);
+    return 0;
+  } catch (VEOException &e) {
+    VEO_ERROR(nullptr, "failed to set CallArgs(%d): %s", argnum, e.what());
+    return -1;
+  }
+}
+
+int veo_args_set_stack(veo_args *ca, int argnum, char *buff, size_t len)
+{
+  try {
+    CallArgsFromC(ca)->set_on_stack(argnum, buff, len);
+    return 0;
+  } catch (VEOException &e) {
+    VEO_ERROR(nullptr, "failed set_on_stack CallArgs(%d): %s", argnum, e.what());
+    return -1;
+  }
+}
+
+void veo_args_clear(struct veo_args *ca)
+{
+  CallArgsFromC(ca)->clear();
+}
+
+void veo_args_free(struct veo_args *ca)
+{
+  delete CallArgsFromC(ca);
+}
+
 /**
  * @brief request a VE thread to call a function
  * @param ctx VEO context to execute the function on VE.
@@ -166,10 +248,10 @@ int veo_get_context_state(veo_thr_ctxt *ctx)
  * @return request ID; VEO_REQUEST_ID_INVALID upon failure.
  */
 uint64_t veo_call_async(veo_thr_ctxt *ctx, uint64_t addr,
-                        const veo_call_args *args)
+                        const veo_args *args)
 {
   try {
-    return ThreadContextFromC(ctx)->callAsync(addr, *args);
+    return ThreadContextFromC(ctx)->callAsync(addr, *CallArgsFromC(args));
   } catch (VEOException &e) {
     return VEO_REQUEST_ID_INVALID;
   }

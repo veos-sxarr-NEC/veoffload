@@ -8,6 +8,14 @@ VERSION_1 {
     veo_get_context_state;
     veo_load_library;
     veo_get_sym;
+    veo_args_alloc;
+    veo_args_clear;
+    veo_args_free;
+    veo_args_set_u64;
+    veo_args_set_i64;
+    veo_args_set_float;
+    veo_args_set_double;
+    veo_args_set_stack;
     veo_call_async;
     veo_call_result;
     veo_call_peek_result;

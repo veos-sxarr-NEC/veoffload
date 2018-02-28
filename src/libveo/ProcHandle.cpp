@@ -287,7 +287,7 @@ uint64_t ProcHandle::loadLibrary(const char *libname)
   if (rv != 0) {
     throw VEOException("Failed to send a library name to VE");
   }
-  CallArgs args{0};// no argument.
+  CallArgs args;// no argument.
   this->main_thread->_doCall(this->funcs.load_library, args);
   this->waitForBlock();
   return this->main_thread->_collectReturnValue();
@@ -308,11 +308,12 @@ uint64_t ProcHandle::getSym(const uint64_t libhdl, const char *symname)
   }
   std::lock_guard<std::mutex> lock(this->main_mutex);
   auto rv = ve_send_data(this->osHandle(), this->funcs.name_buffer,
-              len + 1, symname);
+                         len + 1, (void *)symname);
   if (rv != 0) {
     throw VEOException("Failed to send a symbol name to VE");
   }
-  CallArgs args{.arguments = {libhdl,}, .nargs = 1};
+  CallArgs args;
+  args.set(0, libhdl);
   this->main_thread->_doCall(this->funcs.find_sym, args);
   this->waitForBlock();
   return this->main_thread->_collectReturnValue();
@@ -327,7 +328,8 @@ uint64_t ProcHandle::getSym(const uint64_t libhdl, const char *symname)
 uint64_t ProcHandle::allocBuff(const size_t size)
 {
   std::lock_guard<std::mutex> lock(this->main_mutex);
-  CallArgs args{.arguments = {size,}, .nargs = 1};
+  CallArgs args;
+  args.set(0, size);
   this->main_thread->_doCall(this->funcs.alloc_buff, args);
   this->waitForBlock();
   return this->main_thread->_collectReturnValue();
@@ -342,7 +344,8 @@ uint64_t ProcHandle::allocBuff(const size_t size)
 void ProcHandle::freeBuff(const uint64_t buff)
 {
   std::lock_guard<std::mutex> lock(this->main_mutex);
-  CallArgs args{.arguments = {buff,}, .nargs = 1};
+  CallArgs args;
+  args.set(0, buff);
   this->main_thread->_doCall(this->funcs.free_buff, args);
   this->waitForBlock();
   return;
@@ -369,7 +372,7 @@ void ProcHandle::exitProc()
  */
 ThreadContext *ProcHandle::openContext()
 {
-  CallArgs args{0};
+  CallArgs args;
   std::lock_guard<std::mutex> lock(this->main_mutex);
   this->main_thread->_doCall(this->funcs.create_thread, args);
   uint64_t exc;

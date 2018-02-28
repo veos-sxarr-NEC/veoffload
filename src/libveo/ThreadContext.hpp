@@ -6,6 +6,7 @@
 #define _VEO_THREAD_CONTEXT_HPP_
 
 #include "Command.hpp"
+#include "CallArgs.hpp"
 
 #include <pthread.h>
 #include <semaphore.h>
@@ -28,7 +29,6 @@ enum ExceptionHandlerStatus {
 
 class ProcHandle;
 class RequestHandle;
-typedef veo_call_args CallArgs;
 
 /**
  * @brief VEO thread context
