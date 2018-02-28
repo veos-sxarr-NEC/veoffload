@@ -37,3 +37,15 @@ gcc -std=gnu99 -o test_nb_static test_nb_static.c -I/opt/nec/ve/veos/include \
 
 VEORUN_BIN=`pwd`/veorun_vesleep ./test_nb_static
 
+#--------------------
+
+# Example for using "call by reference" with variables on the stack.
+
+/opt/nec/ve/bin/ncc -shared -fpic -pthread -o libvestackargs.so libvestackargs.c
+
+gcc -std=gnu99 -o test_stackargs test_stackargs.c -I/opt/nec/ve/veos/include \
+  -pthread -L/opt/nec/ve/veos/lib64 -Wl,-rpath=/opt/nec/ve/veos/lib64 -lveo
+
+./test_stackargs
+
+#--------------------

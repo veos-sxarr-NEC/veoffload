@@ -24,6 +24,8 @@
 #ifndef _VE_OFFLOAD_H_
 #define _VE_OFFLOAD_H_
 
+#define VEO_VERSION "1.0"
+#define VEO_API_VERSION 2
 #define VEO_SYMNAME_LEN_MAX (255)
 #define VEO_LOG_CATEGORY "veos.veo"
 #define VEO_MAX_NUM_ARGS (32)
@@ -51,11 +53,17 @@ enum veo_command_state {
   VEO_COMMAND_UNFINISHED,
 };
 
+enum veo_args_intent {
+  VEO_INTENT_IN = 0,
+  VEO_INTENT_INOUT,
+  VEO_INTENT_OUT
+};
 
 struct veo_args;
 struct veo_proc_handle;
 struct veo_thr_ctxt;
 
+int veo_api_version(void);
 struct veo_proc_handle *veo_proc_create(int);
 int veo_proc_destroy(struct veo_proc_handle *);
 struct veo_proc_handle *veo_proc__create(const char *, const char *);
@@ -67,13 +75,14 @@ int veo_context_close(struct veo_thr_ctxt *);
 int veo_get_context_state(struct veo_thr_ctxt *);
 
 struct veo_args *veo_args_alloc(void);
-int veo_args_set_u64(struct veo_args *, int, uint64_t);
-int veo_args_set_i64(struct veo_args *, int, int64_t);
-int veo_args_set_float(struct veo_args *, int, float);
-int veo_args_set_double(struct veo_args *, int, double);
-int veo_args_set_stack(struct veo_args *, int, char *, size_t);
-void veo_args_clear(struct veo_args *);
-void veo_args_free(struct veo_args *);
+int veo_args_set_u64(struct veo_args *arg, int argnum, uint64_t u64);
+int veo_args_set_i64(struct veo_args *arg, int argnum, int64_t i64);
+int veo_args_set_float(struct veo_args *arg, int argnum, float f);
+int veo_args_set_double(struct veo_args *arg, int argnum, double d);
+int veo_args_set_stack(struct veo_args *arg, enum veo_args_intent inout,
+		       int argnum, char *buff, size_t len);
+void veo_args_clear(struct veo_args *arg);
+void veo_args_free(struct veo_args *arg);
 
 uint64_t veo_call_async(struct veo_thr_ctxt *, uint64_t,
                         const struct veo_args *);

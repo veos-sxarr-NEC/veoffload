@@ -32,6 +32,10 @@ using veo::api::ProcHandleFromC;
 using veo::api::ThreadContextFromC;
 using veo::VEOException;
 
+int veo_api_version()
+{
+  return VEO_API_VERSION;
+}
 // implementation of VEO API functions
 /**
  * @brief lower level function to create a VE process
@@ -219,10 +223,11 @@ int veo_args_set_double(veo_args *ca, int argnum, double val)
   }
 }
 
-int veo_args_set_stack(veo_args *ca, int argnum, char *buff, size_t len)
+int veo_args_set_stack(veo_args *ca, enum veo_args_intent inout,
+                       int argnum, char *buff, size_t len)
 {
   try {
-    CallArgsFromC(ca)->set_on_stack(argnum, buff, len);
+    CallArgsFromC(ca)->set_on_stack(inout, argnum, buff, len);
     return 0;
   } catch (VEOException &e) {
     VEO_ERROR(nullptr, "failed set_on_stack CallArgs(%d): %s", argnum, e.what());
