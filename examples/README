@@ -1,0 +1,39 @@
+hello.c: VH side main routine
+libvehello.c: VE side functions.
+
+* How to compile
+Compile libvehello.c by VE compiler.
+ $ /opt/nec/ve/bin/ncc -shared -fpic -o libvehello.so libvehello.c
+Compile hello.c and link libveo library by VH compiler.
+ $ gcc -o hello hello.c -I/opt/nec/ve/veos/include -L/opt/nec/ve/veos/lib64 \
+   -Wl,-rpath=/opt/nec/ve/veos/lib64 -lveo
+
+#--------------------
+
+# Example for non-blocking call result collection
+test_nonblock.c: VH main program
+libvesleep.c: VE function invoked from VH
+
+/opt/nec/ve/bin/ncc -shared -fpic -pthread -o libvesleep.so libvesleep.c
+
+gcc -std=gnu99 -o test_nonblock test_nonblock.c -I/opt/nec/ve/veos/include \
+  -L/opt/nec/ve/veos/lib64 -Wl,-rpath=/opt/nec/ve/veos/lib64 -lveo
+
+#--------------------
+
+# Example for static library instead of .so
+# in case that dynamic libs are not available
+# test_nb_static.c is like test_nonblock.c except for the
+# missing call to veo_load_library() and use of a NULL handle instead.
+
+/opt/nec/ve/bin/ncc -o libvesleep.o -c libvesleep.c
+
+/opt/nec/ve/bin/nar qv libvesleep.a libvesleep.o
+
+/opt/nec/ve/libexec/mk_veorun_static veorun_vesleep libvesleep.a
+
+gcc -std=gnu99 -o test_nb_static test_nb_static.c -I/opt/nec/ve/veos/include \
+  -L/opt/nec/ve/veos/lib64 -Wl,-rpath=/opt/nec/ve/veos/lib64 -lveo
+
+VEORUN_BIN=`pwd`/veorun_vesleep ./test_nb_static
+

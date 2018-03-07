@@ -1,0 +1,18 @@
+Checkout VEO source.
+
+Build libveo.so, a shared library on VH side and install it.
+
+To build VEO, the source tree of VE OS is necessary.
+$ git clone http://.../veos.git
+
+Suppose the veos source is downloaded on /usr/local/src/veos.
+
+Apply patches 000*-*.patch in the patches directory.
+$ cd /usr/local/src/veos
+$ git am /path/to/veoffload/patch/000[0-9]-*.patch
+
+$ ./autogen.sh
+$ ./configure --prefix=/opt/nec/ve/veos --localstatedir=/var/opt/nec/ve/veos \
+  --libdir=/opt/nec/ve/veos/lib64 --with-veos-src=/usr/local/src/veos
+$ make
+# make install

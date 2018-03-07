@@ -1,0 +1,43 @@
+//
+// gcc -std=gnu99 -o test_nonblock test_nonblock.c -I/opt/nec/ve/veos/include -pthread -L/opt/nec/ve/veos/lib64 -Wl,-rpath=/opt/nec/ve/veos/lib64 -lveo
+//
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <ve_offload.h>
+
+int main()
+{
+	int ret;
+	struct veo_proc_handle *proc = veo_proc_create(0);
+	if (proc == NULL) {
+		printf("veo_proc_create() failed!\n");
+		exit(1);
+	}
+	uint64_t handle = veo_load_library(proc, "./libvesleep.so");
+	printf("handle = %p\n", (void *)handle);
+	uint64_t sym = veo_get_sym(proc, handle, "do_sleep");
+	printf("symbol address = %p\n", (void *)sym);
+	
+	struct veo_thr_ctxt *ctx1 = veo_context_open(proc);
+	printf("VEO context1 = %p\n", ctx1);
+
+        uint64_t reqs[2];
+	struct veo_call_args arg;
+	arg.arguments[0] = 5;
+	reqs[0] = veo_call_async(ctx1, sym, &arg);
+	printf("VEO request ID1 = 0x%lx\n", reqs[0]);
+
+	uint64_t retval;
+        while (ret = veo_call_peek_result(ctx1, reqs[0], &retval),
+	       ret == VEO_COMMAND_UNFINISHED) {
+		printf("sleep 1...\n");
+		sleep(1);
+	}
+	
+	int close_status = veo_context_close(ctx1);
+	printf("close status 1 = %d\n", close_status);
+	return 0;
+}
+

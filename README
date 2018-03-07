@@ -1,0 +1,16 @@
+VEO: VE offloading framework
+
+1. Requirement
+This software requires VE OS and libc for VE.
+
+2. Build and Install
+See INSTALL.
+
+3. How to Use
+3.1 Prepare VE program
+Code executed on VE needs to be compiled as a shared library for VE.
+
+VH-side `main' program needs to be linked to libveo library (on VH).
+
+3.2 Run
+Execute the main program on VH. VE OS is necessary to be ready.
