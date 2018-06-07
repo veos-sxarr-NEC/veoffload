@@ -1,7 +1,7 @@
 Summary: VE Offloading Framework
 Name: @PACKAGE@
 Version: @VERSION@
-Release: @RELEASE@
+Release: @RELEASE@%{?dist}
 Vendor: NEC Corporation
 Group: System Environment/Libraries
 License: GPL
