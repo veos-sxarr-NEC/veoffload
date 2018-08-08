@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = src include
-EXTRA_DIST = veo.spec.in examples patches
+EXTRA_DIST = veo.spec.in examples
 dist_noinst_DATA = veo.spec
 CLEANFILES = veo.spec
 

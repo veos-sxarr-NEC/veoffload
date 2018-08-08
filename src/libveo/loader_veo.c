@@ -45,7 +45,6 @@
 #include <sys/statvfs.h>
 #include "ve_memory.h"
 #include "sys_mm.h"
-#include "ve_socket.h"
 #include "handle.h"
 #include "mm_transfer.h"
 #include "velayout.h"

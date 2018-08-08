@@ -8,6 +8,16 @@ VERSION_1 {
     veo_get_context_state;
     veo_load_library;
     veo_get_sym;
+    veo_args_alloc;
+    veo_args_clear;
+    veo_args_free;
+    veo_args_set_i64;
+    veo_args_set_u64;
+    veo_args_set_i32;
+    veo_args_set_u32;
+    veo_args_set_double;
+    veo_args_set_float;
+    veo_args_set_stack;
     veo_call_async;
     veo_call_result;
     veo_call_peek_result;
@@ -16,11 +26,21 @@ VERSION_1 {
     veo_free_mem;
     veo_read_mem;
     veo_write_mem;
+    veo_async_read_mem;
+    veo_async_write_mem;
     /* symbols referred to from libvepseudo */
     g_handle;
     init_lhm_shm_area;
     pseudo_abort;
     cat_pseudo_core;
+    default_page_size;
+    global_tid_info;
+    load_elf;
+    tid_counter_mutex;
+    ve_info;
+    ve_page_info;
+    ve_proc_sigmask;
+    vemva_header;
   local:
     *;
 };

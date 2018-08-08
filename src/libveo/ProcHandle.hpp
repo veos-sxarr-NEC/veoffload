@@ -46,7 +46,7 @@ public:
   void freeBuff(const uint64_t);
 
   int readMem(void *, uint64_t, size_t);
-  int writeMem(uint64_t, void *, size_t);
+  int writeMem(uint64_t, const void *, size_t);
 
   void exitProc(void);
 

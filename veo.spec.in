@@ -4,10 +4,10 @@ Version: @VERSION@
 Release: @RELEASE@%{?dist}
 Vendor: NEC Corporation
 Group: System Environment/Libraries
-License: GPL
+License: LGPLv2+
 Source0: @PACKAGE@-@VERSION@.tar.gz
 Requires: veos veoffload-veorun log4c
-BuildRequires: veoffload-veorun-devel log4c-devel patch
+BuildRequires: veoffload-veorun-devel log4c-devel patch veos-libvepseudo-headers
 %description
 VE offloading framework (VEO) is low-leve interface to control
 VE process from VH side to provide accelerator-like heterogeneous
@@ -25,25 +25,12 @@ Requires: %{name} = %{version}-%{release}
 This package includes header files of VE offloading framework.
 Requires: %{name} = %{version}-%{release}
 
-%define veosdir %{_builddir}/veos-@VERSION@
-
 %prep
 %setup -q
-gunzip -dc %{_topdir}/SOURCES/veos-@VERSION@.tar.gz | tar -C $RPM_BUILD_DIR -xf -
-(cd %veosdir &&
- for p in $RPM_BUILD_DIR/@PACKAGE@-@VERSION@/patches/*.patch; do
-  patch -p1 < $p
- done)
-# prepare ve_syscall_no.h
-cd %veosdir && ./configure --prefix=%{_prefix} --libdir=%{_libdir} \
-  --localstatedir=%{_localstatedir} && cd lib/libvepseudo/common \
-&& make ve_syscall_no.h
 
 %build
-%configure --with-veorun=@VEORUN_BIN@ --with-veos-socket=@VEOS_SOCKET@ \
-  --with-veos-src=%{_builddir}/veos-@VERSION@
+%configure --with-veorun=@VEORUN_BIN@ --with-veos-socket=@VEOS_SOCKET@
 %make_build
-rm -rf %{_builddir}/veos-@VERSION@
 
 %install
 %make_install

@@ -28,13 +28,17 @@ enum ExceptionHandlerStatus {
 
 class ProcHandle;
 class RequestHandle;
-typedef veo_call_args CallArgs;
+class CallArgs;
+namespace internal {
+class CommandExecuteVE;
+}
 
 /**
  * @brief VEO thread context
  */
 class ThreadContext {
   friend class ProcHandle;// ProcHandle controls the main thread directly.
+  friend class internal::CommandExecuteVE;
   typedef bool (ThreadContext::*SyscallFilter)(int, int *);
 private:
   pthread_t pseudo_thread;
@@ -84,15 +88,20 @@ private:
   }
   // handlers for commands
   int64_t _closeCommandHandler(uint64_t);
-  int64_t _callAsyncHandler(uint64_t, const CallArgs &);
+  int64_t _callAsyncHandler(uint64_t, CallArgs &);
+  int _executeVE(Command *);
+  int _readMem(void *, uint64_t, size_t);
+  int _writeMem(uint64_t, const void *, size_t);
 public:
   ThreadContext(ProcHandle *, veos_handle *, bool is_main = false);
   ~ThreadContext() {};
   ThreadContext(const ThreadContext &) = delete;//non-copyable
   veo_context_state getState() { return this->state; }
-  uint64_t callAsync(uint64_t, const CallArgs &);
+  uint64_t callAsync(uint64_t, CallArgs &);
   int callWaitResult(uint64_t, uint64_t *);
   int callPeekResult(uint64_t, uint64_t *);
+  uint64_t asyncReadMem(void *, uint64_t, size_t);
+  uint64_t asyncWriteMem(uint64_t, const void *, size_t);
 
   /**
    * @brief default exception handler
@@ -103,7 +112,7 @@ public:
   int defaultExceptionHandler(uint64_t &exc) {
     return this->exceptionHandler(exc, &ThreadContext::defaultFilter);
   }
-  void _doCall(uint64_t addr, const CallArgs &args);
+  void _doCall(uint64_t addr, CallArgs &args);
   uint64_t _collectReturnValue();
   long handleCloneRequest();
   void startEventLoop(veos_handle *, sem_t *);

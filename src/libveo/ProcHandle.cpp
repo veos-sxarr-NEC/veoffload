@@ -5,6 +5,7 @@
 #include "ProcHandle.hpp"
 #include "ThreadContext.hpp"
 #include "VEOException.hpp"
+#include "CallArgs.hpp"
 #include "log.hpp"
 
 #include <string.h>
@@ -277,6 +278,7 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev)
  */
 uint64_t ProcHandle::loadLibrary(const char *libname)
 {
+  VEO_TRACE(this->main_thread.get(), "%s(%s)", __func__, libname);
   size_t len = strlen(libname);
   if (len > VEO_SYMNAME_LEN_MAX) {
     throw VEOException("Too long name", ENAMETOOLONG);
@@ -287,7 +289,7 @@ uint64_t ProcHandle::loadLibrary(const char *libname)
   if (rv != 0) {
     throw VEOException("Failed to send a library name to VE");
   }
-  CallArgs args{0};// no argument.
+  CallArgs args;// no argument.
   this->main_thread->_doCall(this->funcs.load_library, args);
   this->waitForBlock();
   return this->main_thread->_collectReturnValue();
@@ -308,11 +310,11 @@ uint64_t ProcHandle::getSym(const uint64_t libhdl, const char *symname)
   }
   std::lock_guard<std::mutex> lock(this->main_mutex);
   auto rv = ve_send_data(this->osHandle(), this->funcs.name_buffer,
-              len + 1, symname);
+              len + 1, const_cast<char *>(symname));
   if (rv != 0) {
     throw VEOException("Failed to send a symbol name to VE");
   }
-  CallArgs args{.arguments = {libhdl,}, .nargs = 1};
+  CallArgs args{libhdl};
   this->main_thread->_doCall(this->funcs.find_sym, args);
   this->waitForBlock();
   return this->main_thread->_collectReturnValue();
@@ -327,7 +329,7 @@ uint64_t ProcHandle::getSym(const uint64_t libhdl, const char *symname)
 uint64_t ProcHandle::allocBuff(const size_t size)
 {
   std::lock_guard<std::mutex> lock(this->main_mutex);
-  CallArgs args{.arguments = {size,}, .nargs = 1};
+  CallArgs args{size};
   this->main_thread->_doCall(this->funcs.alloc_buff, args);
   this->waitForBlock();
   return this->main_thread->_collectReturnValue();
@@ -342,7 +344,7 @@ uint64_t ProcHandle::allocBuff(const size_t size)
 void ProcHandle::freeBuff(const uint64_t buff)
 {
   std::lock_guard<std::mutex> lock(this->main_mutex);
-  CallArgs args{.arguments = {buff,}, .nargs = 1};
+  CallArgs args{buff};
   this->main_thread->_doCall(this->funcs.free_buff, args);
   this->waitForBlock();
   return;
@@ -369,7 +371,7 @@ void ProcHandle::exitProc()
  */
 ThreadContext *ProcHandle::openContext()
 {
-  CallArgs args{0};
+  CallArgs args;
   std::lock_guard<std::mutex> lock(this->main_mutex);
   this->main_thread->_doCall(this->funcs.create_thread, args);
   uint64_t exc;
@@ -387,9 +389,6 @@ ThreadContext *ProcHandle::openContext()
   // restart execution; execute until the next block request.
   this->main_thread->_unBlock(tid);
   this->waitForBlock();
-
-  uint64_t r = newctx->callAsync(this->funcs.get_sp, args);
-  newctx->callWaitResult(r, &newctx->ve_sp);
   VEO_TRACE(newctx.get(), "sp = %p", (void *)newctx->ve_sp);
 
   auto rv = newctx.release();
@@ -406,8 +405,7 @@ ThreadContext *ProcHandle::openContext()
 int ProcHandle::readMem(void *dst, uint64_t src, size_t size)
 {
   std::lock_guard<std::mutex> lock(this->main_mutex);
-  auto osh = this->osHandle();
-  return ve_recv_data(osh, src, size, dst);
+  return this->main_thread->_readMem(dst, src, size);
 }
 
 /**
@@ -417,10 +415,9 @@ int ProcHandle::readMem(void *dst, uint64_t src, size_t size)
  * @param size size to transfer in byte
  * @return zero upon success; negative upon failure
  */
-int ProcHandle::writeMem(uint64_t dst, void *src, size_t size)
+int ProcHandle::writeMem(uint64_t dst, const void *src, size_t size)
 {
   std::lock_guard<std::mutex> lock(this->main_mutex);
-  auto osh = this->osHandle();
-  return ve_send_data(osh, dst, size, src);
+  return this->main_thread->_writeMem(dst, src, size);
 }
 } // namespace veo
