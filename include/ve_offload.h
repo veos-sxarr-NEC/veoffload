@@ -93,6 +93,8 @@ int veo_write_mem(struct veo_proc_handle *, uint64_t, const void *, size_t);
 uint64_t veo_async_read_mem(struct veo_thr_ctxt *, void *, uint64_t, size_t);
 uint64_t veo_async_write_mem(struct veo_thr_ctxt *, uint64_t, const void *,
                              size_t);
+
+const char *veo_version_string(void);
 #ifdef __cplusplus
 } // extern "C"
 #endif

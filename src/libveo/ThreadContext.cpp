@@ -40,7 +40,6 @@ std::set<int> default_filtered_syscalls {
   NR_ve_rt_sigaction,
   NR_ve_rt_sigprocmask,
   NR_ve_rt_sigreturn,
-  NR_ve_clone,
   NR_ve_fork,
   NR_ve_vfork,
   NR_ve_execve,
@@ -257,7 +256,7 @@ void ThreadContext::_unBlock(uint64_t sr0)
 uint64_t ThreadContext::_collectReturnValue()
 {
   // VE process is to stop at sysve(VE_SYSVE_VEO_BLOCK, retval, _, _, _, sp);
-  uint64_t args[2];
+  uint64_t args[6];
   vedl_get_syscall_args(this->os_handle->ve_handle, args, 6);
   VEO_ASSERT(args[0] == VE_SYSVE_VEO_BLOCK);
   // update the current sp

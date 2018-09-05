@@ -4,6 +4,7 @@
  */
 
 #include <ve_offload.h>
+#include <config.h>
 #include "CallArgs.hpp"
 #include "ProcHandle.hpp"
 #include "VEOException.hpp"
@@ -421,4 +422,9 @@ void veo_args_clear(veo_args *ca)
 void veo_args_free(veo_args *ca)
 {
   delete CallArgsFromC(ca);
+}
+
+const char *veo_version_string()
+{
+  return VERSION;
 }

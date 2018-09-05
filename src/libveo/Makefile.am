@@ -17,7 +17,7 @@ libveo_la_CPPFLAGS = -DVEOS_SOCKET=\"$(VEOS_SOCKET)\" \
                      -DVE_DEV=\"@VE_DEV@\" -DVEORUN_BIN=\"@VEORUN_BIN@\" \
                      -D_GNU_SOURCE \
                      -I$(top_srcdir)/include \
-                     -I$(ve_includedir) \
+                     -I$(veorun_includedir) \
                      -I$(includedir)/libvepseudo \
                      -I$(includedir)/libvepseudo/amm \
                      -I$(includedir)/libvepseudo/common \

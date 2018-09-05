@@ -7,7 +7,7 @@
 #include "CallArgs.hpp"
 #include <cstdio>
 #include <cstring>
-#include <algorithm>
+#include <numeric>
 #include <string>
 
 namespace veo{
