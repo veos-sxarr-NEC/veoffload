@@ -62,8 +62,10 @@ struct veo_proc_handle;
 struct veo_thr_ctxt;
 
 struct veo_proc_handle *veo_proc_create(int);
+struct veo_proc_handle *veo_proc_create_static(int, const char *);
 int veo_proc_destroy(struct veo_proc_handle *);
-struct veo_proc_handle *veo_proc__create(const char *, const char *);
+struct veo_proc_handle *veo_proc__create(const char *, const char *,
+                                         const char *);
 uint64_t veo_load_library(struct veo_proc_handle *, const char *);
 uint64_t veo_get_sym(struct veo_proc_handle *, uint64_t, const char *);
 

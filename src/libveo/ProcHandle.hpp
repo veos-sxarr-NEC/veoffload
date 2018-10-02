@@ -22,6 +22,7 @@ class ProcHandle {
 private:
   std::mutex main_mutex;//!< acquire while using main_thread
   std::unique_ptr<ThreadContext> main_thread;
+  std::unique_ptr<ThreadContext> worker;
   struct veo__helper_functions funcs;
 
   /**
@@ -36,7 +37,7 @@ private:
   }
   veos_handle *osHandle() { return this->main_thread->os_handle; }
 public:
-  ProcHandle(const char *, const char *);
+  ProcHandle(const char *, const char *, const char *);
   ~ProcHandle();
 
   uint64_t loadLibrary(const char *);

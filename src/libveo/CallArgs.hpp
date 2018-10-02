@@ -27,7 +27,7 @@ struct ArgBase {
   virtual ~ArgBase() = default;
   virtual int64_t getRegVal(uint64_t, int, size_t &) const = 0;
   virtual size_t sizeOnStack() const = 0;
-  virtual void setStackImage(uint64_t, std::string &, int) = 0;
+  virtual void setStackImage(uint64_t, std::string &, int, bool &, bool &) = 0;
   virtual void copyoutFromStackImage(uint64_t, const char *) = 0;
 };
 } // namespace internal
@@ -39,6 +39,12 @@ class CallArgs {
 
   uint64_t stack_top;
   size_t stack_size;
+  std::unique_ptr<char> stack_buf;
+
+  bool copied_in;// necessary to copy stack image to VE
+  bool copied_out;// necessary to copy stack image out from VE
+
+  std::string getStackImage(uint64_t &);
 
 public:
   CallArgs(): arguments(0) {}
@@ -79,8 +85,8 @@ public:
 
   std::vector<uint64_t> getRegVal(uint64_t) const;
 
-  std::string getStackImage(uint64_t &);
-
+  void setup(uint64_t &);
+  void copyin(std::function<int(uint64_t, const void *, size_t)>);
   void copyout(std::function<int(void *, uint64_t, size_t)>);
 
   veo_args *toCHandle() {

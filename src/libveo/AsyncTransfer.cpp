@@ -18,7 +18,11 @@ namespace veo {
 uint64_t ThreadContext::asyncReadMem(void *dst, uint64_t src, size_t size)
 {
   auto id = this->issueRequestID();
-  auto f = std::bind(&ProcHandle::readMem, this->proc, dst, src, size);
+  auto f = [this, dst, src, size] (Command *cmd) {
+    auto rv = this->_readMem(dst, src, size);
+    cmd->setResult(rv, rv == 0 ? VEO_COMMAND_OK : VEO_COMMAND_ERROR);
+    return rv;
+  };
   std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
   this->comq.pushRequest(std::move(req));
   return id;
@@ -28,7 +32,11 @@ uint64_t ThreadContext::asyncWriteMem(uint64_t dst, const void *src,
                                       size_t size)
 {
   auto id = this->issueRequestID();
-  auto f = std::bind(&ProcHandle::writeMem, this->proc, dst, src, size);
+  auto f = [this, dst, src, size] (Command *cmd) {
+    auto rv = this->_writeMem(dst, src, size);
+    cmd->setResult(rv, rv == 0 ? VEO_COMMAND_OK : VEO_COMMAND_ERROR);
+    return rv;
+  };
   std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
   this->comq.pushRequest(std::move(req));
   return id;

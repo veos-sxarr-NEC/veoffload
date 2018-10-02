@@ -1,3 +1,23 @@
+/* Copyright (C) 2017-2018 by NEC Corporation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 /**
  * @file api.c
  * @brief VEO API functions
@@ -5,6 +25,8 @@
 
 #include <ve_offload.h>
 #include <config.h>
+#include <cstdio>
+#include <cstdlib>
 #include "CallArgs.hpp"
 #include "ProcHandle.hpp"
 #include "VEOException.hpp"
@@ -48,15 +70,25 @@ using veo::VEOException;
 
 // implementation of VEO API functions
 /**
+ * \defgroup veoapi VEO API
+ *
+ * VE Offloading API functions.
+ * To use VEO API functions, include "ve_offload.h" header.
+ */
+//@{
+/**
  * @brief lower level function to create a VE process
+ *
  * @param ossock path to VE OS socket
  * @param vedev path to VE device file
- * @return pointer to VEO process handle upon success; NULL upon failure.
+ * @return pointer to VEO process handle upon success
+ * @retval NULL VE process creation failed.
  */
-veo_proc_handle *veo_proc__create(const char *ossock, const char *vedev)
+veo_proc_handle *veo_proc__create(const char *ossock, const char *vedev,
+                                  const char *binname)
 {
   try {
-    auto rv = new veo::ProcHandle(ossock, vedev);
+    auto rv = new veo::ProcHandle(ossock, vedev, binname);
     return rv->toCHandle();
   } catch (VEOException &e) {
     VEO_ERROR(nullptr, "failed to create ProcHandle: %s", e.what());
@@ -66,23 +98,43 @@ veo_proc_handle *veo_proc__create(const char *ossock, const char *vedev)
 }
 
 /**
- * @brief create a VE process
+ * @brief create a VE process with non-default veorun binary
+ *
  * @param venode VE node number
- * @return pointer to VEO process handle upon success; NULL upon failure.
+ * @param veobin VE alternative veorun binary path
+ * @return pointer to VEO process handle upon success
+ * @retval NULL VE process creation failed.
  */
-veo_proc_handle *veo_proc_create(int venode)
+veo_proc_handle *veo_proc_create_static(int venode, const char *veobin)
 {
   char vedev[16];// the size of "/dev/veslot" = 12.
   snprintf(vedev, sizeof(vedev), VE_DEV, venode);
   char ossock[sizeof(VEOS_SOCKET) + 16];
   snprintf(ossock, sizeof(ossock), VEOS_SOCKET, venode);
-  return veo_proc__create(ossock, vedev);
+  return veo_proc__create(ossock, vedev, veobin);
+}
+ 
+/**
+ * @brief create a VE process
+ *
+ * @param venode VE node number
+ * @return pointer to VEO process handle upon success
+ * @retval NULL VE process creation failed.
+ */
+veo_proc_handle *veo_proc_create(int venode)
+{
+  const char *veobin = getenv("VEORUN_BIN");
+  if (veobin != nullptr)
+    return veo_proc_create_static(venode, veobin);
+  else
+    return veo_proc_create_static(venode, VEORUN_BIN);
 }
 
 /**
  * @brief destroy a VE process
  * @param proc pointer to VEO process handle
- * @return zero on success, negative if any exception occured
+ * @retval 0 VEO process handle is successfully destroyed.
+ * @retval -1 VEO process handle destruction failed.
  */
 int veo_proc_destroy(veo_proc_handle *proc)
 {
@@ -98,7 +150,8 @@ int veo_proc_destroy(veo_proc_handle *proc)
  * @brief load a VE library
  * @param proc VEO process handle
  * @param libname a library file name to load
- * @return a handle for the library upon success; zero upon failure.
+ * @return a handle for the library
+ * @retval 0 library loading request failed.
  */
 uint64_t veo_load_library(veo_proc_handle *proc, const char *libname)
 {
@@ -116,7 +169,8 @@ uint64_t veo_load_library(veo_proc_handle *proc, const char *libname)
  * @param proc VEO process handle
  * @param libhdl a library handle
  * @param symname symbol name to find
- * @return VEMVA of the symbol upon success; zero upon failure.
+ * @return VEMVA of the symbol upon success.
+ * @retval 0 failed to find symbol.
  */
 uint64_t veo_get_sym(veo_proc_handle *proc, uint64_t libhdl,
                      const char *symname)
@@ -136,7 +190,8 @@ uint64_t veo_get_sym(veo_proc_handle *proc, uint64_t libhdl,
  * Create a new VEO context, a pseudo thread and VE thread for the context.
  *
  * @param proc VEO process handle
- * @return a pointer to VEO thread context upon success; NULL upon failure.
+ * @return a pointer to VEO thread context upon success.
+ * @retval NULL failed to create a VEO context.
  */
 veo_thr_ctxt *veo_context_open(veo_proc_handle *proc)
 {
@@ -151,8 +206,10 @@ veo_thr_ctxt *veo_context_open(veo_proc_handle *proc)
 
 /**
  * @brief close a VEO context
+ *
  * @param ctx a VEO context to close
- * @return zero upon success; negative upon failure.
+ * @retval 0 VEO context is successfully closed.
+ * @retval non-zero failed to close VEO context.
  */
 int veo_context_close(veo_thr_ctxt *ctx)
 {
@@ -170,7 +227,12 @@ int veo_context_close(veo_thr_ctxt *ctx)
 
 /**
  * @brief get VEO context state
+ *
  * @return the state of the VEO context state.
+ * @retval VEO_STATE_RUNNING VEO context is running.
+ * @retval VEO_STATE_SYSCALL VEO context is handling a system call from VE.
+ * @retval VEO_STATE_BLOCKED VEO context is blocked.
+ * @retvav VEO_STATE_EXIT VEO context  exited.
  */
 int veo_get_context_state(veo_thr_ctxt *ctx)
 {
@@ -179,10 +241,12 @@ int veo_get_context_state(veo_thr_ctxt *ctx)
 
 /**
  * @brief request a VE thread to call a function
+ *
  * @param ctx VEO context to execute the function on VE.
  * @param addr VEMVA of the function to call
  * @param args arguments to be passed to the function
- * @return request ID; VEO_REQUEST_ID_INVALID upon failure.
+ * @return request ID
+ * @retval VEO_REQUEST_ID_INVALID request failed.
  */
 uint64_t veo_call_async(veo_thr_ctxt *ctx, uint64_t addr, veo_args *args)
 {
@@ -195,10 +259,15 @@ uint64_t veo_call_async(veo_thr_ctxt *ctx, uint64_t addr, veo_args *args)
 
 /**
  * @brief pick up a resutl from VE function if it has finished
+ *
  * @param ctx VEO context
  * @param reqid request ID
  * @param retp pointer to buffer to store the return value from the function.
- * @return 0 on success; -1 on failure; 3 if function not finished.
+ * @retval VEO_COMMAND_OK function is successfully returned.
+ * @retval VEO_COMMAND_EXCEPTION an exception occurred on function.
+ * @retval VEO_COMMAND_ERROR an error occurred on function.
+ * @retval VEO_COMMAND_UNFINISHED function is not finished.
+ * @retval -1 internal error.
  */
 int veo_call_peek_result(veo_thr_ctxt *ctx, uint64_t reqid, uint64_t *retp)
 {
@@ -211,10 +280,14 @@ int veo_call_peek_result(veo_thr_ctxt *ctx, uint64_t reqid, uint64_t *retp)
 
 /**
  * @brief pick up a resutl from VE function
+
  * @param ctx VEO context
  * @param reqid request ID
  * @param retp pointer to buffer to store the return value from the function.
- * @return zero upon success; negative upon failure.
+ * @retval VEO_COMMAND_OK function is successfully returned.
+ * @retval VEO_COMMAND_EXCEPTION an exception occurred on execution.
+ * @retval VEO_COMMAND_ERROR an error occurred on execution.
+ * @retval -1 internal error.
  */
 int veo_call_wait_result(veo_thr_ctxt *ctx, uint64_t reqid, uint64_t *retp)
 {
@@ -227,10 +300,13 @@ int veo_call_wait_result(veo_thr_ctxt *ctx, uint64_t reqid, uint64_t *retp)
 
 /**
  * @brief Allocate a VE memory buffer
+ *
  * @param h VEO process handle
  * @param addr [out] VEMVA address
  * @param size [in] size in bytes
- * @return zero upon success; negative upon failure.
+ * @retval 0 memory allocation succeeded.
+ * @retval -1 memory allocation failed.
+ * @retval -2 internal error.
  */
 int veo_alloc_mem(veo_proc_handle *h, uint64_t *addr, const size_t size)
 {
@@ -246,9 +322,11 @@ int veo_alloc_mem(veo_proc_handle *h, uint64_t *addr, const size_t size)
 
 /**
  * @brief Free a VE memory buffer
+ *
  * @param h VEO process handle
  * @param addr [in] VEMVA address
- * @return zero upon success; negative upon failure.
+ * @retval 0 memory is successfully freed.
+ * @retval -1 internal error.
  */
 int veo_free_mem(veo_proc_handle *h, uint64_t addr)
 {
@@ -257,11 +335,12 @@ int veo_free_mem(veo_proc_handle *h, uint64_t addr)
   } catch (VEOException &e) {
     return -1;
   }
-	return 0;
+  return 0;
 }
 
 /**
  * @brief Read VE memory
+ *
  * @param h VEO process handle
  * @param dst destination VHVA
  * @param src source VEMVA
@@ -279,6 +358,7 @@ int veo_read_mem(veo_proc_handle *h, void *dst, uint64_t src, size_t size)
 
 /**
  * @brief Write VE memory
+ *
  * @param h VEO process handle
  * @param dst destination VEMVA
  * @param src source VHVA
@@ -302,7 +382,8 @@ int veo_write_mem(veo_proc_handle *h, uint64_t dst, const void *src,
  * @param dst destination VHVA
  * @param src source VEMVA
  * @param size size in byte
- * @return request ID; VEO_REQUEST_ID_INVALID upon failure.
+ * @return request ID
+ * @retval VEO_REQUEST_ID_INVALID request failed.
  */
 uint64_t veo_async_read_mem(veo_thr_ctxt *ctx, void *dst, uint64_t src,
                             size_t size)
@@ -321,7 +402,8 @@ uint64_t veo_async_read_mem(veo_thr_ctxt *ctx, void *dst, uint64_t src,
  * @param dst destination VEMVA
  * @param src source VHVA
  * @param size size in byte
- * @return request ID; VEO_REQUEST_ID_INVALID upon failure.
+ * @return request ID
+ * @retval VEO_REQUEST_ID_INVALID request failed.
  */
 uint64_t veo_async_write_mem(veo_thr_ctxt *ctx, uint64_t dst, const void *src,
                              size_t size)
@@ -334,9 +416,10 @@ uint64_t veo_async_write_mem(veo_thr_ctxt *ctx, uint64_t dst, const void *src,
 }
 
 /**
- * @brief allocate veo_args
+ * @brief allocate VEO arguments object (veo_args)
  *
  * @return pointer to veo_args
+ * @retval NULL the allocation of veo_args failed.
  */
 veo_args *veo_args_alloc(void)
 {
@@ -350,7 +433,7 @@ veo_args *veo_args_alloc(void)
 }
 
 /**
- * @brief set an integer argument
+ * @brief set a 64-bit integer argument
  *
  * @param ca veo_args
  * @param argnum the argnum-th argument
@@ -361,22 +444,67 @@ int veo_args_set_i64(veo_args *ca, int argnum, int64_t val)
 {
   return veo_args_set_(ca, argnum, val);
 }
+
+/**
+ * @brief set a 64-bit uunsigned integer argument
+ *
+ * @param ca veo_args
+ * @param argnum the argnum-th argument
+ * @param val value to be set
+ * @return zero upon success; negative upon failure.
+ */
 int veo_args_set_u64(veo_args *ca, int argnum, uint64_t val)
 {
   return veo_args_set_(ca, argnum, val);
 }
+
+/**
+ * @brief set a 32-bit integer argument
+ *
+ * @param ca veo_args
+ * @param argnum the argnum-th argument
+ * @param val value to be set
+ * @return zero upon success; negative upon failure.
+ */
 int veo_args_set_i32(veo_args *ca, int argnum, int32_t val)
 {
   return veo_args_set_(ca, argnum, val);
 }
+
+/**
+ * @brief set a 32-bit unsigned integer argument
+ *
+ * @param ca veo_args
+ * @param argnum the argnum-th argument
+ * @param val value to be set
+ * @return zero upon success; negative upon failure.
+ */
 int veo_args_set_u32(veo_args *ca, int argnum, uint32_t val)
 {
   return veo_args_set_(ca, argnum, val);
 }
+
+/**
+ * @brief set a double precision floating point number argument
+ *
+ * @param ca veo_args
+ * @param argnum the argnum-th argument
+ * @param val value to be set
+ * @return zero upon success; negative upon failure.
+ */
 int veo_args_set_double(veo_args *ca, int argnum, double val)
 {
   return veo_args_set_(ca, argnum, val);
 }
+
+/**
+ * @brief set a single precision floating point number argument
+ *
+ * @param ca veo_args
+ * @param argnum the argnum-th argument
+ * @param val value to be set
+ * @return zero upon success; negative upon failure.
+ */
 int veo_args_set_float(veo_args *ca, int argnum, float val)
 {
   return veo_args_set_(ca, argnum, val);
@@ -390,7 +518,8 @@ int veo_args_set_float(veo_args *ca, int argnum, float val)
  * @param argnum argument number that is being set
  * @param buff char pointer to buffer that will be copied to the VE stack
  * @param len length of buffer that is copied to the VE stack
- * @return zero if successful, -1 if any error has occured
+ * @retval  0 argumen is successfully set.
+ * @retval -1 an error occurred.
  *
  * The buffer is copied to the stack and will look to the VE callee like a
  * local variable of the caller function. It is currently erased right after
@@ -414,17 +543,33 @@ int veo_args_set_stack(veo_args *ca, enum veo_args_intent inout,
   }
 }
 
+/**
+ * @brief clear arguments set in VEO arguments object
+ *
+ * @param ca veo_args object
+ */
 void veo_args_clear(veo_args *ca)
 {
   CallArgsFromC(ca)->clear();
 }
 
+/**
+ * @brief free VEO arguments object
+ *
+ * @param ca veo_args object
+ */
 void veo_args_free(veo_args *ca)
 {
   delete CallArgsFromC(ca);
 }
 
+/**
+ * @brief VEO version
+ *
+ * @return pointer to VEO version string
+ */
 const char *veo_version_string()
 {
   return VERSION;
 }
+//@}

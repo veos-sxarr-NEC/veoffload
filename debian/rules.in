@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+export DH_VERBOSE=1
+
+export PREFIX = "@prefix@"
+export INCLUDEDIR = "@includedir@"
+export LIBDIR = "@libdir@"
+export LOCALSTATEDIR = "@localstatedir@"
+
+%:
+	dh $@ --with autoreconf
+
+override_dh_auto_configure:
+	dh_auto_configure -- --prefix=${PREFIX} \
+          --libdir=${LIBDIR} \
+          --localstatedir=${LOCALSTATEDIR} \
+          --with-veorun=@VEORUN_BIN@ \
+	  --with-veos-socket=@VEOS_SOCKET@ \
+	  --with-release-id=@RELEASE@
+
+override_dh_shlibdeps:
+	dh_shlibdeps -- --ignore-missing-info

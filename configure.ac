@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([veoffload], [1.2.2])
+AC_INIT([veoffload], [1.3.1])
 AM_INIT_AUTOMAKE([foreign -Wall])
 AC_CONFIG_SRCDIR([src/libveo/api.cpp])
 AC_CONFIG_HEADERS([include/config.h])
@@ -74,6 +74,8 @@ AC_TYPE_UINT64_T
 # Checks for library functions.
 
 AC_CONFIG_FILES([Makefile
+                 doc/Makefile
+                 debian/Makefile
                  include/Makefile
                  src/Makefile
                  src/libveo/Makefile])

@@ -32,7 +32,7 @@ public:
   explicit Command(uint64_t id): msgid(id) {}
   Command() = delete;
   Command(const Command &) = delete;
-  virtual int64_t operator()() = 0;
+  virtual int operator()() = 0;
   void setResult(uint64_t r, int s) { this->retval = r; this->status = s; }
   uint64_t getID() { return this->msgid; }
   int getStatus() { return this->status; }

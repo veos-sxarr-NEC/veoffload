@@ -1,6 +1,7 @@
 VERSION_1 {
   global:
     veo_proc_create;
+    veo_proc_create_static;
     veo_proc__create;
     veo_proc_destroy;
     veo_context_open;

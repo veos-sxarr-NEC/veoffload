@@ -1,5 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = src include
+SUBDIRS = src include debian doc
 EXTRA_DIST = veo.spec.in examples
 dist_noinst_DATA = veo.spec
 CLEANFILES = veo.spec

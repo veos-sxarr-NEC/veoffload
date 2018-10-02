@@ -14,7 +14,7 @@ typedef std::unique_ptr<Command> CmdPtr;
 void BlockingQueue::push(CmdPtr cmd) {
   std::lock_guard<std::mutex> lock(this->mtx);
   this->queue.push_back(std::move(cmd));
-  this->cond.notify_one();
+  this->cond.notify_all();
 }
 
 /**

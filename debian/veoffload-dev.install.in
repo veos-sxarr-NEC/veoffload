@@ -1,0 +1,4 @@
+.@includedir@/*
+.@libdir@/libveo.a
+.@libdir@/libveo.la
+.@libdir@/libveo.so

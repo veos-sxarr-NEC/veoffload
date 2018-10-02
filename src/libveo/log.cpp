@@ -1,4 +1,6 @@
 #include <mutex>
+#include <string>
+#include <cstdio>
 
 #include <ve_offload.h>
 #include "log.hpp"
@@ -20,6 +22,14 @@ void veo__vlog(const ThreadContext *ctx, const log4c_location_info_t *loc,
   //TODO: switch to disable logging for performance
   // ctx can be nullptr.
   std::lock_guard<std::mutex> lock(log::log_mtx_);
+  std::string newfmt;
+  if (ctx != nullptr) {
+    char header[32];
+    snprintf(header, sizeof(header), "[context %p] ", ctx);
+    newfmt = header;
+    newfmt += fmt;
+    fmt = newfmt.c_str();
+  }
   __log4c_category_vlog(log::log_category_, loc, prio, fmt, list);
 }
 void veo__log(const ThreadContext *ctx, const log4c_location_info_t *loc,
