@@ -94,7 +94,7 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <div class="line">  <span class="keyword">struct </span>veo_args *argp = <a class="code" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc</a>();</div>
 <div class="line">  uint64_t <span class="keywordtype">id</span> = <a class="code" href="group__veoapi.html#ga60ccb5a66f6a7af37b148a4da643fe74" title="request a VE thread to call a function ">veo_call_async</a>(ctx, sym, argp);</div>
 <div class="line">  uint64_t retval;</div>
-<div class="line">  veo_wait_result(ctx, <span class="keywordtype">id</span>, &amp;retval);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb" title="pick up a resutl from VE function ">veo_call_wait_result</a>(ctx, <span class="keywordtype">id</span>, &amp;retval);</div>
 <div class="line">  <a class="code" href="group__veoapi.html#ga3896858cc2ef3417c00843a3cd84b760" title="free VEO arguments object ">veo_args_free</a>(argp);</div>
 <div class="line">  <a class="code" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close</a>(ctx);</div>
 <div class="line">  <span class="keywordflow">return</span> 0;</div>
@@ -111,11 +111,11 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <li>Create a VEO context, a thread in a VE process specified by a VEO process handle to execute a VE function, by <a class="el" href="group__veoapi.html#ga8752c03fee0f7f200227a43cfd50f84c" title="open a VEO context ">veo_context_open()</a>.</li>
 <li>Create a VEO arguments object by <a class="el" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc()</a> and set arguments. See the next chapter "Various Arguments for a VE function" in detail.</li>
 <li>Call a VE function by <a class="el" href="group__veoapi.html#ga60ccb5a66f6a7af37b148a4da643fe74" title="request a VE thread to call a function ">veo_call_async()</a> with an address of a function and a VEO arguments object. A request ID is returned.</li>
-<li>Wait for the completion and get the return value by veo_wait_result().</li>
+<li>Wait for the completion and get the return value by <a class="el" href="group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb" title="pick up a resutl from VE function ">veo_call_wait_result()</a>.</li>
 </ol>
 <h3>Compile VH Main Program</h3>
 <p>Compile source code on VH side as shown below.</p>
-<div class="fragment"><div class="line">$ gcc -o hello hello.c -I/opt/nec/ve/veos/include -L/opt/nec/ve/veo/lib64 \</div>
+<div class="fragment"><div class="line">$ gcc -o hello hello.c -I/opt/nec/ve/veos/include -L/opt/nec/ve/veos/lib64 \</div>
 <div class="line">   -Wl,-rpath=/opt/nec/ve/veos/lib64 -lveo</div>
 </div><!-- fragment --><p>The headers for VEO are installed in /opt/nec/ve/veos/include; libveo, the shared library of VEO, is in /opt/nec/ve/veos/lib64.</p>
 <h3>Run a program with VEO</h3>
