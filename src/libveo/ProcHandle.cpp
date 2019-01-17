@@ -30,7 +30,7 @@ extern "C" {
 #undef new
 
 /* symbols required but undefined in libvepseudo */
-__thread veos_handle *g_handle;
+extern __thread veos_handle *g_handle;
 extern struct tid_info global_tid_info[VEOS_MAX_VE_THREADS];
 
 int init_stack_veo(veos_handle*, int, char**, char**, struct ve_start_ve_req_cmd *);
@@ -107,6 +107,50 @@ void pseudo_abort()
 
 namespace veo {
 /**
+ * @brief Initializes rwlock on DMA and fork
+ *
+ * This function initiazes a lock which will be used to synchronize
+ * request related to DMA(reading data from VE memory) and creating new
+ * process(fork/vfork). Execution of both requests parallely leads to
+ * memory curruption.
+ *
+ * @return abort on failure.
+ */
+void init_rwlock_to_sync_dma_fork()
+{
+  // copied from pseudo_process.c
+  int ret = -1;
+  pthread_rwlockattr_t sync_fork_dma_attr;
+
+  ret = pthread_rwlockattr_init(&sync_fork_dma_attr);
+  if (ret) {
+    PSEUDO_ERROR("Failed to initialize attribute %s", strerror(ret));
+    fprintf(stderr, "VE process setup failed\n");
+    pseudo_abort();
+  }
+
+  ret = pthread_rwlockattr_setkind_np(&sync_fork_dma_attr,
+          PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
+  if (ret) {
+    PSEUDO_ERROR("Failed to set rwlock attribute: %s", strerror(ret));
+    fprintf(stderr, "VE process setup failed\n");
+    pseudo_abort();
+  }
+
+  ret = pthread_rwlock_init(&sync_fork_dma, &sync_fork_dma_attr);
+  if (ret) {
+    PSEUDO_ERROR("Failed to init rwlock %s", strerror(ret));
+    fprintf(stderr, "VE process setup failed\n");
+    pseudo_abort();
+  }
+
+  ret = pthread_rwlockattr_destroy(&sync_fork_dma_attr);
+  if (ret) {
+    PSEUDO_ERROR("Failed to destroy rwlock attribute: %s", strerror(ret));
+  }
+}
+
+/**
  * @brief create a VE process and initialize a thread context
  *
  * @param[in,out] ctx the thread context of the main thread
@@ -144,6 +188,13 @@ int spawn_helper(ThreadContext *ctx, veos_handle *oshandle, const char *binname)
 
   // Set global TID array for main thread.
   global_tid_info[0].vefd = oshandle->ve_handle->vefd;
+  global_tid_info[0].veos_hndl = oshandle;
+  tid_counter = 0;
+  global_tid_info[0].tid_val = getpid();// main thread
+  global_tid_info[0].flag = 0;
+  global_tid_info[0].mutex = PTHREAD_MUTEX_INITIALIZER;
+  global_tid_info[0].cond = PTHREAD_COND_INITIALIZER;
+  init_rwlock_to_sync_dma_fork();
   // Initialize the syscall argument area.
   rv = init_lhm_shm_area(oshandle);
   if (rv < 0) {
@@ -267,6 +318,16 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
     throw VEOException("Failed to receive data from VE");
   }
   VEO_ASSERT(this->funcs.version == VEORUN_VERSION);
+#define DEBUG_PRINT_HELPER(ctx, data, member) \
+  VEO_DEBUG(ctx, #member " = %#lx", data.member)
+  DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, version);
+  DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, load_library);
+  DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, alloc_buff);
+  DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, free_buff);
+  DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, find_sym);
+  DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, create_thread);
+  DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, call_func);
+  DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, exit);
   // create worker
   CallArgs args_create_thread;
   this->main_thread->_doCall(this->funcs.create_thread, args_create_thread);
@@ -339,9 +400,20 @@ uint64_t ProcHandle::getSym(const uint64_t libhdl, const char *symname)
   CallArgs args;
   args.set(0, libhdl);
   args.setOnStack(VEO_INTENT_IN, 1, const_cast<char *>(symname), len + 1);
+  sym_mtx.lock();
+  auto itr = sym_name.find(symname);
+  if( itr != sym_name.end() ) {
+    sym_mtx.unlock();
+    VEO_TRACE(this->worker.get(), "symbol addr = %#lx", itr->second);
+    return itr->second;
+  }
+  sym_mtx.unlock();
   uint64_t symaddr = doOnContext(this->worker.get(),
                                  this->funcs.find_sym, args);
   VEO_TRACE(this->worker.get(), "symbol addr = %#lx", symaddr);
+  sym_mtx.lock();
+  sym_name[symname] = symaddr;
+  sym_mtx.unlock();
   return symaddr;
 }
 

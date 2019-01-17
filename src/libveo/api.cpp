@@ -91,6 +91,16 @@ using veo::VEOException;
  */
 //@{
 /**
+ * @brief return the API version of the VE Offload implementation
+ *
+ * @retval integer value with API version
+ */
+const int veo_api_version()
+{
+  return VEO_API_VERSION;
+}
+
+/**
  * @brief lower level function to create a VE process
  *
  * @param ossock path to VE OS socket
@@ -266,6 +276,26 @@ uint64_t veo_call_async(veo_thr_ctxt *ctx, uint64_t addr, veo_args *args)
 {
   try {
     return ThreadContextFromC(ctx)->callAsync(addr, *CallArgsFromC(args));
+  } catch (VEOException &e) {
+    return VEO_REQUEST_ID_INVALID;
+  }
+}
+
+/**
+ * @brief request a VE thread to call a function
+ *
+ * @param ctx VEO context to execute the function on VE.
+ * @param libhdl a library handle
+ * @param symname symbol name to find
+ * @param args arguments to be passed to the function
+ * @return request ID
+ * @retval VEO_REQUEST_ID_INVALID request failed.
+ */
+uint64_t veo_call_async_by_name(veo_thr_ctxt *ctx, uint64_t libhdl,
+                        const char *symname, veo_args *args)
+{
+  try {
+    return ThreadContextFromC(ctx)->callAsyncByName(libhdl, symname, *CallArgsFromC(args));
   } catch (VEOException &e) {
     return VEO_REQUEST_ID_INVALID;
   }

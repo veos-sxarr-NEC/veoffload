@@ -1,13 +1,26 @@
 Summary: VE Offloading Framework
+%if "%{libc}" == "glibc"
 Name: @PACKAGE@
+Conflicts: @PACKAGE@-musl
+%else
+Name: @PACKAGE@-musl
+Conflicts: @PACKAGE@
+%endif
 Version: @VERSION@
 Release: @RELEASE@%{?dist}
 Vendor: NEC Corporation
 Group: System Environment/Libraries
 License: LGPLv2+
 Source0: @PACKAGE@-@VERSION@.tar.gz
-Requires: veos veoffload-veorun log4c
-BuildRequires: veoffload-veorun-devel log4c-devel patch veos-libvepseudo-headers
+Requires: veos log4c
+BuildRequires: log4c-devel veos-libvepseudo-headers
+%if "%{libc}" == "glibc"
+Requires: veoffload-veorun
+BuildRequires: veoffload-veorun-devel
+%else
+Requires: veoffload-veorun-musl
+BuildRequires: veoffload-veorun-musl-devel
+%endif
 %description
 VE offloading framework (VEO) is low-leve interface to control
 VE process from VH side to provide accelerator-like heterogeneous
@@ -26,7 +39,7 @@ This package includes header files of VE offloading framework.
 Requires: %{name} = %{version}-%{release}
 
 %prep
-%setup -q
+%setup -q -n @PACKAGE@-@VERSION@
 
 %build
 %configure --with-veorun=@VEORUN_BIN@ --with-veos-socket=@VEOS_SOCKET@

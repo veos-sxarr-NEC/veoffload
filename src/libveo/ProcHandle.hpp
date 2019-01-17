@@ -4,6 +4,7 @@
  */
 #ifndef _VEO_PROC_HANDLE_HPP_
 #define _VEO_PROC_HANDLE_HPP_
+#include <unordered_map>
 #include <memory>
 #include <mutex>
 #include <iostream>
@@ -20,6 +21,8 @@ namespace veo {
  */
 class ProcHandle {
 private:
+  std::unordered_map<std::string, uint64_t> sym_name;
+  std::mutex sym_mtx;
   std::mutex main_mutex;//!< acquire while using main_thread
   std::unique_ptr<ThreadContext> main_thread;
   std::unique_ptr<ThreadContext> worker;

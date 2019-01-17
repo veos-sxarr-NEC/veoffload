@@ -14,5 +14,5 @@ edit = $(SED) -e 's|@PACKAGE[@]|@PACKAGE@|g' \
               -e 's|@VEORUN_BIN[@]|@VEORUN_BIN@|g' \
               -e 's|@VEOS_SOCKET[@]|@VEOS_SOCKET@|g'
 
-veo.spec: $(srcdir)/veo.spec.in
+veo.spec: $(srcdir)/veo.spec.in Makefile
 	$(edit) $< > $@

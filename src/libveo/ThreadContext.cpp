@@ -115,9 +115,19 @@ int ThreadContext::handleSingleException(uint64_t &exs, SyscallFilter filter)
   int ret;
   int break_flag = 0;
   VEO_TRACE(this, "%s()", __func__);
-  ret = vedl_wait_exception(this->os_handle->ve_handle, &exs);
-  if (ret != 0) {
-    throw VEOException("vedl_wait_exception failed", errno);
+  constexpr uint64_t VEO_EXCEPTION_MASK = ~0xffUL;
+  for (;;) {
+    ret = vedl_wait_exception(this->os_handle->ve_handle, &exs);
+    if (ret != 0) {
+      throw VEOException("vedl_wait_exception failed", errno);
+    }
+    if (!(exs & VEO_EXCEPTION_MASK)) { // no exceptions
+      VEO_DEBUG(this, "No exception; exs = %lx", exs);
+      // vedl_wait_exception() can return when no exceptions are raised.
+      // Retry in such case.
+      continue;
+    } else
+      break;
   }
   VEO_TRACE(this, "exs = 0x%016lx", exs);
   if (exs & EXS_MONC) {
@@ -172,6 +182,7 @@ bool ThreadContext::defaultFilter(int sysnum, int *break_flag)
     return true;
   }
   if (internal::is_veo_block(this->os_handle->ve_handle, sysnum)) {
+    block_syscall_req_ve_os(this->os_handle);// notify VEOS of BLOCKED state.
     *break_flag = VEO_HANDLER_STATUS_BLOCK_REQUESTED;
     this->state = VEO_STATE_BLOCKED;
     return true;
@@ -450,6 +461,20 @@ uint64_t ThreadContext::callAsync(uint64_t addr, CallArgs &args)
   return id;
 }
 
+/**
+ * @brief call a VE function specified by symbol name asynchronously
+ *
+ * @param libhdl handle of library
+ * @param symname a symbol name to find
+ * @param args arguments of the function
+ * @return request ID
+ */
+uint64_t ThreadContext::callAsyncByName(uint64_t libhdl, const char *symname, CallArgs &args)
+{
+  uint64_t addr = this->proc->getSym(libhdl, symname);
+  return this->callAsync(addr, args);
+}
+
 uint64_t ThreadContext::_callOpenContext(ProcHandle *proc,
                                          uint64_t addr, CallArgs &args)
 {
@@ -503,8 +528,15 @@ uint64_t ThreadContext::_callOpenContext(ProcHandle *proc,
  */
 int ThreadContext::callPeekResult(uint64_t reqid, uint64_t *retp)
 {
+  std::lock_guard<std::mutex> lock(this->req_mtx);
+  auto itr = rem_reqid.find(reqid);
+  if( itr == rem_reqid.end() ) {
+    return VEO_COMMAND_ERROR;
+  }
   auto c = this->comq.peekCompletion(reqid);
   if (c != nullptr) {
+    if (!rem_reqid.erase(reqid))
+      return VEO_COMMAND_ERROR;
     *retp = c->getRetval();
     return c->getStatus();
   }
@@ -522,6 +554,17 @@ int ThreadContext::callPeekResult(uint64_t reqid, uint64_t *retp)
  */
 int ThreadContext::callWaitResult(uint64_t reqid, uint64_t *retp)
 {
+  req_mtx.lock();
+  auto itr = rem_reqid.find(reqid);
+  if( itr == rem_reqid.end() ) {
+    req_mtx.unlock();
+    return VEO_COMMAND_ERROR;
+  }
+  if (!rem_reqid.erase(reqid)) {
+    req_mtx.unlock();
+    return VEO_COMMAND_ERROR;
+  }
+  req_mtx.unlock();
   auto c = this->comq.waitCompletion(reqid);
   *retp = c->getRetval();
   return c->getStatus();

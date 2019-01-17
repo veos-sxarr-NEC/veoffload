@@ -9,6 +9,7 @@ VERSION_1 {
     veo_get_context_state;
     veo_load_library;
     veo_get_sym;
+    veo_api_version;
     veo_args_alloc;
     veo_args_clear;
     veo_args_free;
@@ -20,6 +21,7 @@ VERSION_1 {
     veo_args_set_float;
     veo_args_set_stack;
     veo_call_async;
+    veo_call_async_by_name;
     veo_call_result;
     veo_call_peek_result;
     veo_call_wait_result;
@@ -38,6 +40,7 @@ VERSION_1 {
     global_tid_info;
     load_elf;
     tid_counter_mutex;
+    sync_fork_dma;
     ve_info;
     ve_page_info;
     ve_proc_sigmask;

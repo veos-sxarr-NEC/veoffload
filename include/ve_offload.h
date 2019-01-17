@@ -24,6 +24,7 @@
 #ifndef _VE_OFFLOAD_H_
 #define _VE_OFFLOAD_H_
 
+#define VEO_API_VERSION 4
 #define VEO_SYMNAME_LEN_MAX (255)
 #define VEO_LOG_CATEGORY "veos.veo"
 #define VEO_MAX_NUM_ARGS (32)
@@ -86,6 +87,7 @@ void veo_args_clear(struct veo_args *);
 void veo_args_free(struct veo_args *);
 
 uint64_t veo_call_async(struct veo_thr_ctxt *, uint64_t, struct veo_args *);
+uint64_t veo_call_async_by_name(struct veo_thr_ctxt *, uint64_t, const char *, struct veo_args *);
 int veo_call_peek_result(struct veo_thr_ctxt *, uint64_t, uint64_t *);
 int veo_call_wait_result(struct veo_thr_ctxt *, uint64_t, uint64_t *);
 int veo_alloc_mem(struct veo_proc_handle *, uint64_t *, const size_t);
@@ -97,6 +99,7 @@ uint64_t veo_async_write_mem(struct veo_thr_ctxt *, uint64_t, const void *,
                              size_t);
 
 const char *veo_version_string(void);
+const int veo_api_version(void);
 #ifdef __cplusplus
 } // extern "C"
 #endif

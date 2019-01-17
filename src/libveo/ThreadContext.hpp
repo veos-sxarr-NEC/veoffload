@@ -6,7 +6,8 @@
 #define _VEO_THREAD_CONTEXT_HPP_
 
 #include "Command.hpp"
-
+#include <mutex>
+#include <unordered_set>
 #include <pthread.h>
 #include <semaphore.h>
 
@@ -45,6 +46,8 @@ private:
   bool is_main_thread;
   uint64_t seq_no;
   uint64_t ve_sp;
+  std::unordered_set<uint64_t> rem_reqid;
+  std::mutex req_mtx;
 
   bool defaultFilter(int, int *);
   bool hookCloneFilter(int, int *);
@@ -80,6 +83,8 @@ private:
     while (ret == VEO_REQUEST_ID_INVALID) {
       ret = __atomic_fetch_add(&this->seq_no, 1, __ATOMIC_SEQ_CST);
     }
+    std::lock_guard<std::mutex> lock(this->req_mtx);
+    rem_reqid.insert(ret);
     return ret;
   }
   // handlers for commands
@@ -94,6 +99,7 @@ public:
   ThreadContext(const ThreadContext &) = delete;//non-copyable
   veo_context_state getState() { return this->state; }
   uint64_t callAsync(uint64_t, CallArgs &);
+  uint64_t callAsyncByName(uint64_t, const char *, CallArgs &);
   int callWaitResult(uint64_t, uint64_t *);
   int callPeekResult(uint64_t, uint64_t *);
   uint64_t asyncReadMem(void *, uint64_t, size_t);
