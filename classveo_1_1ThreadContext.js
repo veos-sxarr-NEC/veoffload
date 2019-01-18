@@ -5,6 +5,7 @@ var classveo_1_1ThreadContext =
     [ "ThreadContext", "classveo_1_1ThreadContext.html#a798325b9a5a535220f53689285bd8445", null ],
     [ "getState", "classveo_1_1ThreadContext.html#a114a5a1e5aa85785e4e9d4bba6baa6c5", null ],
     [ "callAsync", "classveo_1_1ThreadContext.html#a040e180e8b6ed36bd85aab519bda7a48", null ],
+    [ "callAsyncByName", "classveo_1_1ThreadContext.html#adad980f5836c8f171e7c2895324558ca", null ],
     [ "callWaitResult", "classveo_1_1ThreadContext.html#a4ce858e2c377d81323a7576f94477b40", null ],
     [ "callPeekResult", "classveo_1_1ThreadContext.html#a84158c6754bc9157f8d67a448ad609c5", null ],
     [ "asyncReadMem", "classveo_1_1ThreadContext.html#a382b846c8817c5a6232fe996e7c18067", null ],

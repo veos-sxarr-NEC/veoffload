@@ -1,5 +1,6 @@
 var group__veoapi =
 [
+    [ "veo_api_version", "group__veoapi.html#ga5216105cc184fc1ae12cdd475433fcc1", null ],
     [ "veo_proc__create", "group__veoapi.html#ga82344af8315b947a4b689fb698c78ef9", null ],
     [ "veo_proc_create_static", "group__veoapi.html#ga530f674447a56261f0a75891f3a60913", null ],
     [ "veo_proc_create", "group__veoapi.html#ga6193ffeb9a3ac5c34ce666ea652e6daa", null ],
@@ -10,6 +11,7 @@ var group__veoapi =
     [ "veo_context_close", "group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea", null ],
     [ "veo_get_context_state", "group__veoapi.html#ga3cff2ea980a390d822a7e3f7b8c82485", null ],
     [ "veo_call_async", "group__veoapi.html#ga60ccb5a66f6a7af37b148a4da643fe74", null ],
+    [ "veo_call_async_by_name", "group__veoapi.html#ga1999d72380998381df067cfcd9213030", null ],
     [ "veo_call_peek_result", "group__veoapi.html#gaff69e830b0a20170ca775ec09f397101", null ],
     [ "veo_call_wait_result", "group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb", null ],
     [ "veo_alloc_mem", "group__veoapi.html#ga410cd584d728e6801bf2c378e43e4e64", null ],

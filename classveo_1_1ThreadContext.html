@@ -74,6 +74,9 @@ veo_context_state&#160;</td><td class="memItemRight" valign="bottom"><b>getState
 <tr class="memitem:a040e180e8b6ed36bd85aab519bda7a48"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classveo_1_1ThreadContext.html#a040e180e8b6ed36bd85aab519bda7a48">callAsync</a> (uint64_t, <a class="el" href="classveo_1_1CallArgs.html">CallArgs</a> &amp;)</td></tr>
 <tr class="memdesc:a040e180e8b6ed36bd85aab519bda7a48"><td class="mdescLeft">&#160;</td><td class="mdescRight">call a VE function asynchronously  <a href="#a040e180e8b6ed36bd85aab519bda7a48">More...</a><br/></td></tr>
 <tr class="separator:a040e180e8b6ed36bd85aab519bda7a48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adad980f5836c8f171e7c2895324558ca"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classveo_1_1ThreadContext.html#adad980f5836c8f171e7c2895324558ca">callAsyncByName</a> (uint64_t, const char *, <a class="el" href="classveo_1_1CallArgs.html">CallArgs</a> &amp;)</td></tr>
+<tr class="memdesc:adad980f5836c8f171e7c2895324558ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">call a VE function specified by symbol name asynchronously  <a href="#adad980f5836c8f171e7c2895324558ca">More...</a><br/></td></tr>
+<tr class="separator:adad980f5836c8f171e7c2895324558ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ce858e2c377d81323a7576f94477b40"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classveo_1_1ThreadContext.html#a4ce858e2c377d81323a7576f94477b40">callWaitResult</a> (uint64_t, uint64_t *)</td></tr>
 <tr class="memdesc:a4ce858e2c377d81323a7576f94477b40"><td class="mdescLeft">&#160;</td><td class="mdescRight">wait for the result of request (command)  <a href="#a4ce858e2c377d81323a7576f94477b40">More...</a><br/></td></tr>
 <tr class="separator:a4ce858e2c377d81323a7576f94477b40"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -148,6 +151,49 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>ProcHandle</b></td><
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">addr</td><td>VEMVA of VE function to call </td></tr>
+    <tr><td class="paramname">args</td><td>arguments of the function </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>request ID </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="adad980f5836c8f171e7c2895324558ca"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t veo::ThreadContext::callAsyncByName </td>
+          <td>(</td>
+          <td class="paramtype">uint64_t&#160;</td>
+          <td class="paramname"><em>libhdl</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>symname</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classveo_1_1CallArgs.html">CallArgs</a> &amp;&#160;</td>
+          <td class="paramname"><em>args</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>call a VE function specified by symbol name asynchronously </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">libhdl</td><td>handle of library </td></tr>
+    <tr><td class="paramname">symname</td><td>a symbol name to find </td></tr>
     <tr><td class="paramname">args</td><td>arguments of the function </td></tr>
   </table>
   </dd>

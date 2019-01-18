@@ -65,7 +65,7 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <div class="fragment"><div class="line"><span class="preprocessor"># yum install veoffload</span></div>
 </div><!-- fragment --><p>veoffload-veorun is automatically installed by dependency.</p>
 <p>To install the packages to develop VEO programs by yum, execute the following command as root:</p>
-<div class="fragment"><div class="line"><span class="preprocessor"># yum install veoffload-devel</span></div>
+<div class="fragment"><div class="line"><span class="preprocessor"># yum install veoffload-veorun-devel veoffload-devel</span></div>
 </div><!-- fragment --><h3>VE Code</h3>
 <p>Code to run on VE is shown below. Standard C functions are available, hence, you can use printf(3).</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
@@ -78,21 +78,22 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 </div><!-- fragment --><p>Save the above code as libvehello.c.</p>
 <p>A function on VE called via VEO needs to return a 64-bit unsigned integer. A function on VE called via VEO can have arguments as mentioned later.</p>
 <h3>Compile VE Code</h3>
-<p>To execute a function on VE using VEO, compile and link the source file into a shared library.</p>
-<div class="fragment"><div class="line">$ /opt/nec/ve/bin/ncc -shared -fpic -o libvehello.so libvehello.c</div>
+<p>To execute a function on VE using VEO, compile and link the source file into an executable for VEO.</p>
+<div class="fragment"><div class="line">$ /opt/nec/ve/bin/ncc -c -o libvehello.o libvehello.c</div>
+<div class="line">$ /opt/nec/ve/libexec/mk_veorun_static vehello libvehello.o -pthread -ldl</div>
 </div><!-- fragment --><h3>VH Main Program</h3>
 <p>Main routine to run VE program is shown below.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;ve_offload.h&gt;</span></div>
 <div class="line"><span class="keywordtype">int</span> main()</div>
 <div class="line">{</div>
-<div class="line">  <span class="keyword">struct </span>veo_proc_handle *proc = <a class="code" href="group__veoapi.html#ga6193ffeb9a3ac5c34ce666ea652e6daa" title="create a VE process ">veo_proc_create</a>(0);<span class="comment">/* on VE node #0 */</span></div>
-<div class="line">  uint64_t handle = <a class="code" href="group__veoapi.html#ga3e17de75677bfb4bf8cf4b0a5a8031ab" title="load a VE library ">veo_load_library</a>(proc, <span class="stringliteral">&quot;./libvehello.so&quot;</span>);</div>
-<div class="line">  uint64_t sym = <a class="code" href="group__veoapi.html#gaca0242035575b6d811bedc53a942bc12" title="find a symbol in VE program ">veo_get_sym</a>(proc, handle, <span class="stringliteral">&quot;hello&quot;</span>);</div>
+<div class="line">  <span class="comment">/* Load &quot;vehello&quot; on VE node 0 */</span></div>
+<div class="line">  <span class="keyword">struct </span>veo_proc_handle *proc = <a class="code" href="group__veoapi.html#ga530f674447a56261f0a75891f3a60913" title="create a VE process with non-default veorun binary ">veo_proc_create_static</a>(0, <span class="stringliteral">&quot;./vehello&quot;</span>);</div>
+<div class="line">  uint64_t handle = NULL;<span class="comment">/* find a function in the executable */</span></div>
 <div class="line"></div>
 <div class="line">  <span class="keyword">struct </span>veo_thr_ctxt *ctx = <a class="code" href="group__veoapi.html#ga8752c03fee0f7f200227a43cfd50f84c" title="open a VEO context ">veo_context_open</a>(proc);</div>
 <div class="line"></div>
 <div class="line">  <span class="keyword">struct </span>veo_args *argp = <a class="code" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc</a>();</div>
-<div class="line">  uint64_t <span class="keywordtype">id</span> = <a class="code" href="group__veoapi.html#ga60ccb5a66f6a7af37b148a4da643fe74" title="request a VE thread to call a function ">veo_call_async</a>(ctx, sym, argp);</div>
+<div class="line">  uint64_t <span class="keywordtype">id</span> = <a class="code" href="group__veoapi.html#ga1999d72380998381df067cfcd9213030" title="request a VE thread to call a function ">veo_call_async_by_name</a>(ctx, handle, <span class="stringliteral">&quot;hello&quot;</span>, argp);</div>
 <div class="line">  uint64_t retval;</div>
 <div class="line">  <a class="code" href="group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb" title="pick up a resutl from VE function ">veo_call_wait_result</a>(ctx, <span class="keywordtype">id</span>, &amp;retval);</div>
 <div class="line">  <a class="code" href="group__veoapi.html#ga3896858cc2ef3417c00843a3cd84b760" title="free VEO arguments object ">veo_args_free</a>(argp);</div>
@@ -102,15 +103,10 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 </div><!-- fragment --><p>A program using VEO needs to include "ve_offload.h". In the header, the prototypes of VEO functions and constants for VEO API are defined.</p>
 <p>To execute a VE function with VEO:</p>
 <ol type="1">
-<li>Create a process on a VE node by <a class="el" href="group__veoapi.html#ga6193ffeb9a3ac5c34ce666ea652e6daa" title="create a VE process ">veo_proc_create()</a>. A VEO process handle is returned.</li>
-<li>Load a VE library and find an address of a function to call.<ol type="a">
-<li><a class="el" href="group__veoapi.html#ga3e17de75677bfb4bf8cf4b0a5a8031ab" title="load a VE library ">veo_load_library()</a> loads a VE shared library on the VE process.</li>
-<li><a class="el" href="group__veoapi.html#gaca0242035575b6d811bedc53a942bc12" title="find a symbol in VE program ">veo_get_sym()</a> searches an address of a symbol of a function or a variable.</li>
-</ol>
-</li>
+<li>Create a process on a VE node by <a class="el" href="group__veoapi.html#ga530f674447a56261f0a75891f3a60913" title="create a VE process with non-default veorun binary ">veo_proc_create_static()</a>. Specify VE node number and an executable to run on the VE. A VEO process handle is returned.</li>
 <li>Create a VEO context, a thread in a VE process specified by a VEO process handle to execute a VE function, by <a class="el" href="group__veoapi.html#ga8752c03fee0f7f200227a43cfd50f84c" title="open a VEO context ">veo_context_open()</a>.</li>
 <li>Create a VEO arguments object by <a class="el" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc()</a> and set arguments. See the next chapter "Various Arguments for a VE function" in detail.</li>
-<li>Call a VE function by <a class="el" href="group__veoapi.html#ga60ccb5a66f6a7af37b148a4da643fe74" title="request a VE thread to call a function ">veo_call_async()</a> with an address of a function and a VEO arguments object. A request ID is returned.</li>
+<li>Call a VE function by <a class="el" href="group__veoapi.html#ga1999d72380998381df067cfcd9213030" title="request a VE thread to call a function ">veo_call_async_by_name()</a> with a symbol of a function or a variale and a VEO arguments object. A request ID is returned.</li>
 <li>Wait for the completion and get the return value by <a class="el" href="group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb" title="pick up a resutl from VE function ">veo_call_wait_result()</a>.</li>
 </ol>
 <h3>Compile VH Main Program</h3>
@@ -122,7 +118,7 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <p>Execute the compiled VEO program.</p>
 <div class="fragment"><div class="line">$ ./hello</div>
 <div class="line">Hello, world</div>
-</div><!-- fragment --><p>VE code is executed on VE node 0, specified by <code><a class="el" href="group__veoapi.html#ga6193ffeb9a3ac5c34ce666ea652e6daa" title="create a VE process ">veo_proc_create()</a></code>.</p>
+</div><!-- fragment --><p>VE code is executed on VE node 0, specified by <code><a class="el" href="group__veoapi.html#ga530f674447a56261f0a75891f3a60913" title="create a VE process with non-default veorun binary ">veo_proc_create_static()</a></code>.</p>
 <h2>Various Arguments for a VE function</h2>
 <p>You can pass one or more arguments to a function on VE. To specify arguments, VEO arguments object is used. A VEO argument object is created by <a class="el" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc()</a>. When a VEO argument object is created, the VEO argument object is empty, without any arguments passed. Even if a VE function has no arguments, a VEO arguments object is still necessary.</p>
 <p>VEO provides functions to set an argument in various types.</p>
@@ -136,11 +132,10 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <div class="fragment"><div class="line"><span class="keywordtype">int</span> <a class="code" href="group__veoapi.html#ga26a7032d6a33f3b19ae37963cc4a1224" title="set a double precision floating point number argument ">veo_args_set_double</a>(<span class="keyword">struct</span> veo_args *args, <span class="keywordtype">int</span> argnum, <span class="keywordtype">double</span> val);</div>
 <div class="line"><span class="keywordtype">int</span> <a class="code" href="group__veoapi.html#ga21898741050e60fdc40f73c4d0807fbe" title="set a single precision floating point number argument ">veo_args_set_float</a>(<span class="keyword">struct</span> veo_args *args, <span class="keywordtype">int</span> argnum, <span class="keywordtype">float</span> val);</div>
 </div><!-- fragment --><p>For instance: suppose that proc is a VEO process handle and func(int, double) is defined in a VE library whose handle is handle.</p>
-<div class="fragment"><div class="line">uint64_t symbol = <a class="code" href="group__veoapi.html#gaca0242035575b6d811bedc53a942bc12" title="find a symbol in VE program ">veo_get_sym</a>(proc, handle, <span class="stringliteral">&quot;func&quot;</span>);</div>
-<div class="line"><span class="keyword">struct </span>veo_args *args = <a class="code" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc</a>();</div>
+<div class="fragment"><div class="line"><span class="keyword">struct </span>veo_args *args = <a class="code" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc</a>();</div>
 <div class="line"><a class="code" href="group__veoapi.html#ga5e649ac59dc81053fd90173ddfca4d85" title="set a 32-bit integer argument ">veo_args_set_i32</a>(args, 0, 1);</div>
 <div class="line"><a class="code" href="group__veoapi.html#ga26a7032d6a33f3b19ae37963cc4a1224" title="set a double precision floating point number argument ">veo_args_set_double</a>(args, 1, 2.0);</div>
-<div class="line">uint64_t <span class="keywordtype">id</span> = <a class="code" href="group__veoapi.html#ga60ccb5a66f6a7af37b148a4da643fe74" title="request a VE thread to call a function ">veo_call_async</a>(ctx, symbol, args);</div>
+<div class="line">uint64_t <span class="keywordtype">id</span> = <a class="code" href="group__veoapi.html#ga1999d72380998381df067cfcd9213030" title="request a VE thread to call a function ">veo_call_async_by_name</a>(ctx, handle, <span class="stringliteral">&quot;func&quot;</span>, args);</div>
 </div><!-- fragment --><p>In this case, func(1, 2.0) is called on VE.</p>
 <h3>Stack Arguments</h3>
 <p>Non basic typed arguments and arguments by reference are put on a stack. VEO supports an argument on a stack.</p>
