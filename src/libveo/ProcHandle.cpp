@@ -53,7 +53,7 @@ int init_lhm_shm_area(veos_handle *handle)
   VEO_TRACE(ctx, "Entering %s", __func__);
 
   /* Allocate shared memory segment */
-  retval = shmget(getpid(), PAGE_SIZE_4KB, IPC_CREAT|S_IRWXU);
+  retval = shmget(syscall(SYS_gettid), PAGE_SIZE_4KB, IPC_CREAT|S_IRWXU);
   if (-1 == retval) {
     VEO_DEBUG(ctx, "Failed to get shared memory (errno=%d)", errno);
     goto out_error1;
@@ -190,7 +190,7 @@ int spawn_helper(ThreadContext *ctx, veos_handle *oshandle, const char *binname)
   global_tid_info[0].vefd = oshandle->ve_handle->vefd;
   global_tid_info[0].veos_hndl = oshandle;
   tid_counter = 0;
-  global_tid_info[0].tid_val = getpid();// main thread
+  global_tid_info[0].tid_val = syscall(SYS_gettid);// main thread
   global_tid_info[0].flag = 0;
   global_tid_info[0].mutex = PTHREAD_MUTEX_INITIALIZER;
   global_tid_info[0].cond = PTHREAD_COND_INITIALIZER;
