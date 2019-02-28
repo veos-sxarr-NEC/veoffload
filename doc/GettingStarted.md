@@ -37,7 +37,7 @@ To install the packages to develop VEO programs by yum, execute
 the following command as root:
 
 ~~~
-# yum install veoffload-devel
+# yum install veoffload-veorun-devel veoffload-devel
 ~~~
 
 ### VE Code
@@ -61,10 +61,11 @@ A function on VE called via VEO can have arguments as mentioned later.
 
 ### Compile VE Code
 To execute a function on VE using VEO, compile and link the source file
-into a shared library.
+into an executable for VEO.
 
 ~~~
-$ /opt/nec/ve/bin/ncc -shared -fpic -o libvehello.so libvehello.c
+$ /opt/nec/ve/bin/ncc -c -o libvehello.o libvehello.c
+$ /opt/nec/ve/libexec/mk_veorun_static vehello libvehello.o -pthread -ldl
 ~~~
 
 ### VH Main Program
@@ -74,8 +75,9 @@ Main routine to run VE program is shown below.
 #include <ve_offload.h>
 int main()
 {
-  struct veo_proc_handle *proc = veo_proc_create(0);/* on VE node #0 */
-  uint64_t handle = veo_load_library(proc, "./libvehello.so");
+  /* Load "vehello" on VE node 0 */
+  struct veo_proc_handle *proc = veo_proc_create_static(0, "./vehello");
+  uint64_t handle = NULL;/* find a function in the executable */
 
   struct veo_thr_ctxt *ctx = veo_context_open(proc);
 
@@ -94,17 +96,16 @@ In the header, the prototypes of VEO functions and constants for
 VEO API are defined.
 
 To execute a VE function with VEO:
-1. Create a process on a VE node by veo_proc_create().
+1. Create a process on a VE node by veo_proc_create_static().
+ Specify VE node number and an executable to run on the VE.
  A VEO process handle is returned.
-2. Load a VE library.
- veo_load_library() loads a VE shared library on the VE process.
-3. Create a VEO context, a thread in a VE process specified by a VEO process
+2. Create a VEO context, a thread in a VE process specified by a VEO process
  handle to execute a VE function, by veo_context_open().
-4. Create a VEO arguments object by veo_args_alloc() and set arguments.
+3. Create a VEO arguments object by veo_args_alloc() and set arguments.
  See the next chapter "Various Arguments for a VE function" in detail.
-5. Call a VE function by veo_call_async_by_name() with a symbol of a function or a variale
+4. Call a VE function by veo_call_async_by_name() with a symbol of a function or a variale
  and a VEO arguments object. A request ID is returned.
-6. Wait for the completion and get the return value by veo_call_wait_result().
+5. Wait for the completion and get the return value by veo_call_wait_result().
 
 ### Compile VH Main Program
 Compile source code on VH side as shown below.
@@ -125,7 +126,7 @@ $ ./hello
 Hello, world
 ~~~
 
-VE code is executed on VE node 0, specified by `veo_proc_create()`.
+VE code is executed on VE node 0, specified by `veo_proc_create_static()`.
 
 ## Various Arguments for a VE function
 You can pass one or more arguments to a function on VE.

@@ -119,6 +119,8 @@ int ThreadContext::handleSingleException(uint64_t &exs, SyscallFilter filter)
   for (;;) {
     ret = vedl_wait_exception(this->os_handle->ve_handle, &exs);
     if (ret != 0) {
+      if ( ret == -1 && errno == EINTR )
+        continue;
       throw VEOException("vedl_wait_exception failed", errno);
     }
     if (!(exs & VEO_EXCEPTION_MASK)) { // no exceptions
@@ -426,6 +428,9 @@ int ThreadContext::close()
  */
 uint64_t ThreadContext::callAsync(uint64_t addr, CallArgs &args)
 {
+  if ( addr == 0 )
+    return VEO_REQUEST_ID_INVALID;
+
   auto id = this->issueRequestID();
   auto f = [&args, this, addr, id] (Command *cmd) {
     VEO_TRACE(this, "[request #%d] start...", id);
