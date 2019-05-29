@@ -39,7 +39,7 @@ class CallArgs {
 
   uint64_t stack_top;
   size_t stack_size;
-  std::unique_ptr<char> stack_buf;
+  std::unique_ptr<char[]> stack_buf;
 
   bool copied_in;// necessary to copy stack image to VE
   bool copied_out;// necessary to copy stack image out from VE

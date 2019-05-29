@@ -38,7 +38,6 @@ namespace internal {
  */
 std::set<int> default_filtered_syscalls {
   NR_ve_rt_sigaction,
-  NR_ve_rt_sigprocmask,
   NR_ve_rt_sigreturn,
   NR_ve_fork,
   NR_ve_vfork,
@@ -95,6 +94,7 @@ void start_child_thread(veos_handle *os_handle, void *arg)
 
 ThreadContext::ThreadContext(ProcHandle *p, veos_handle *osh, bool is_main):
   proc(p), os_handle(osh), state(VEO_STATE_UNKNOWN),
+//  pseudo_thread(pthread_self()), is_main_thread(is_main) {}
   pseudo_thread(pthread_self()), is_main_thread(is_main), seq_no(0) {}
 
 /**
@@ -301,6 +301,10 @@ long ThreadContext::handleCloneRequest()
   char name[] = "__clone_veo";// the 2nd argument is not const.
   auto rv = ve__do_clone(NR_ve_clone, name, this->os_handle,
               &internal::start_child_thread, &arg);
+  if ( rv < 0 ) {
+    VEO_ERROR(this, "ve__do_clone() fail. (errno = %d)", -rv);
+    return rv;
+  }
   while (sem_wait(&child_thread_sem) != 0) {
     VEO_ASSERT(errno == EINTR);
   }
@@ -375,6 +379,7 @@ void ThreadContext::eventLoop()
     if (rv != 0) {
       VEO_ERROR(this, "Internal error on executing a command(%d)", rv);
       this->state = VEO_STATE_EXIT;
+      this->comq.setCompletion();
       return;
     }
   }
@@ -411,6 +416,9 @@ int64_t ThreadContext::_closeCommandHandler(uint64_t id)
  */
 int ThreadContext::close()
 {
+  if ( this->state == VEO_STATE_EXIT )
+    return 0;
+
   auto id = this->issueRequestID();
   auto f = std::bind(&ThreadContext::_closeCommandHandler, this, id);
   std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
@@ -428,7 +436,7 @@ int ThreadContext::close()
  */
 uint64_t ThreadContext::callAsync(uint64_t addr, CallArgs &args)
 {
-  if ( addr == 0 )
+  if ( addr == 0 || this->state == VEO_STATE_EXIT)
     return VEO_REQUEST_ID_INVALID;
 
   auto id = this->issueRequestID();
@@ -483,6 +491,9 @@ uint64_t ThreadContext::callAsyncByName(uint64_t libhdl, const char *symname, Ca
 uint64_t ThreadContext::_callOpenContext(ProcHandle *proc,
                                          uint64_t addr, CallArgs &args)
 {
+  if ( this->state == VEO_STATE_EXIT )
+    return VEO_REQUEST_ID_INVALID;
+
   auto id = this->issueRequestID();
   auto f = [&args, this, proc, addr, id] (Command *cmd) {
     VEO_TRACE(this, "[request #%d] start...", id);
@@ -509,9 +520,15 @@ uint64_t ThreadContext::_callOpenContext(ProcHandle *proc,
         != VEO_HANDLER_STATUS_BLOCK_REQUESTED) {
       throw VEOException("Unexpected exception occured");
     }
-    VEO_TRACE(newctx.get(), "sp = %p", (void *)newctx->ve_sp);
-    auto rv = newctx.release();
-    cmd->setResult(rv, VEO_COMMAND_OK);
+    if(tid < 0){
+      VEO_ERROR(this, "newctx->handleCloneRequest() fail. (errno = %d)", -tid);
+      cmd->setResult(tid, VEO_COMMAND_OK);
+    }
+    else{
+      VEO_TRACE(newctx.get(), "sp = %p", (void *)newctx->ve_sp);
+      auto rv = newctx.release();
+      cmd->setResult(rv, VEO_COMMAND_OK);
+    }
     VEO_TRACE(this, "[request #%d] done", id);
     return 0;
   };
@@ -529,7 +546,7 @@ uint64_t ThreadContext::_callOpenContext(ProcHandle *proc,
  * @retval VEO_COMMAND_OK the execution of the function succeeded.
  * @retval VEO_COMMAND_EXCEPTION exception occured on the execution.
  * @retval VEO_COMMAND_ERROR error occured on handling the command.
- * @retval VEO_COMMAND_UNFINISHED the command is not finished, yet.
+ * @retval VEO_COMMAND_UNFINISHED the command is not finished.
  */
 int ThreadContext::callPeekResult(uint64_t reqid, uint64_t *retp)
 {
@@ -556,6 +573,7 @@ int ThreadContext::callPeekResult(uint64_t reqid, uint64_t *retp)
  * @retval VEO_COMMAND_OK the execution of the function succeeded.
  * @retval VEO_COMMAND_EXCEPTION exception occured on the execution.
  * @retval VEO_COMMAND_ERROR error occured on handling the command.
+ * @retval VEO_COMMAND_UNFINISHED the command is not finished.
  */
 int ThreadContext::callWaitResult(uint64_t reqid, uint64_t *retp)
 {

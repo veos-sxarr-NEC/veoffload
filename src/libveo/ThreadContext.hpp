@@ -87,6 +87,7 @@ private:
     rem_reqid.insert(ret);
     return ret;
   }
+
   // handlers for commands
   int64_t _closeCommandHandler(uint64_t);
   bool _executeVE(int &, uint64_t &);

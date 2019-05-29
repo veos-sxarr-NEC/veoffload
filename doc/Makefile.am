@@ -1,4 +1,4 @@
-dist_noinst_DATA = GettingStarted.md Doxyfile
+dist_noinst_DATA = GettingStarted.md Restriction.md Doxyfile
 EXTRA_DIST = Doxyfile.in
 CLEANFILES = Doxyfile doxygen
 

@@ -983,6 +983,7 @@ char * open_bin_file (char *filename, int *pfd)
 		goto end;
 	}
 end:
+	free(filename);
 	*pfd = fd;
 	errno = -retval;
 	return buf;

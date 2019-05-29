@@ -5,6 +5,7 @@
 #ifndef _VEO_PROC_HANDLE_HPP_
 #define _VEO_PROC_HANDLE_HPP_
 #include <unordered_map>
+#include <utility>
 #include <memory>
 #include <mutex>
 #include <iostream>
@@ -14,6 +15,16 @@
 #include "ThreadContext.hpp"
 #include "VEOException.hpp"
 
+namespace std {
+    template <>
+    class hash<std::pair<uint64_t, std::string>> {
+    public:
+        size_t operator()(const std::pair<uint64_t, std::string>& x) const{
+            return hash<uint64_t>()(x.first) ^ hash<std::string>()(x.second);
+        }
+    };
+}
+
 namespace veo {
 
 /**
@@ -21,7 +32,7 @@ namespace veo {
  */
 class ProcHandle {
 private:
-  std::unordered_map<std::string, uint64_t> sym_name;
+  std::unordered_map<std::pair<uint64_t, std::string>, uint64_t> sym_name;
   std::mutex sym_mtx;
   std::mutex main_mutex;//!< acquire while using main_thread
   std::unique_ptr<ThreadContext> main_thread;

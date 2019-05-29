@@ -46,5 +46,5 @@ __attribute__((constructor))
 static void veo_log_init(void)
 {
   veo::log::log_category_ = log4c_category_get(VEO_LOG_CATEGORY);
-  cat_pseudo_core = log4c_category_get("veos.pseudo_process.core");
+  cat_pseudo_core = log4c_category_get("veos.veo.pseudo");
 }

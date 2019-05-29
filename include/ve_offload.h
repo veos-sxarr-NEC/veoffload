@@ -26,7 +26,7 @@
 
 #define VEO_API_VERSION 4
 #define VEO_SYMNAME_LEN_MAX (255)
-#define VEO_LOG_CATEGORY "veos.veo"
+#define VEO_LOG_CATEGORY "veos.veo.veo"
 #define VEO_MAX_NUM_ARGS (32)
 
 #define VEO_REQUEST_ID_INVALID (~0UL)

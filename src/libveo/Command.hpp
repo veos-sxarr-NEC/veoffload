@@ -28,6 +28,7 @@ private:
   uint64_t msgid;/*! message ID */
   uint64_t retval;/*! returned value from the function on VE */
   int status;
+
 public:
   explicit Command(uint64_t id): msgid(id) {}
   Command() = delete;
@@ -53,6 +54,7 @@ public:
   std::unique_ptr<Command> pop();
   std::unique_ptr<Command> tryFind(uint64_t);
   std::unique_ptr<Command> wait(uint64_t);
+  std::unique_ptr<Command> popNoWait();
 };
 
 /**
@@ -70,6 +72,7 @@ public:
   void pushCompletion(std::unique_ptr<Command>);
   std::unique_ptr<Command> waitCompletion(uint64_t msgid);
   std::unique_ptr<Command> peekCompletion(uint64_t msgid);
+  void setCompletion();
 };
 } // namespace veo
 #endif

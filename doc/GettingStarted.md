@@ -60,17 +60,29 @@ A function on VE called via VEO needs to return a 64-bit unsigned integer.
 A function on VE called via VEO can have arguments as mentioned later.
 
 ### Compile VE Code
-To execute a function on VE using VEO, compile and link the source file
-into an executable for VEO.
+VEO supports a function in an executable or in a shared library.
 
+To execute a function on VE using VEO, compile and link a source file
+into a binary for VE.
+
+To build an executable with the functions statically linked, execute as follows:
 ~~~
 $ /opt/nec/ve/bin/ncc -c -o libvehello.o libvehello.c
-$ /opt/nec/ve/libexec/mk_veorun_static vehello libvehello.o -pthread -ldl
+$ /opt/nec/ve/bin/mk_veorun_static -o vehello libvehello.o
+~~~
+To build a shared library with the functions for dynamic loading, execute as follows:
+~~~
+$ /opt/nec/ve/bin/ncc -fpic -shared -o libvehello.so libvehello.c
 ~~~
 
 ### VH Main Program
-Main routine to run VE program is shown below.
+Main routine on VH side to run VE program is shown here.
 
+A program using VEO needs to include "ve_offload.h".
+In the header, the prototypes of VEO functions and constants for
+VEO API are defined.
+
+The example VH program to call a VE function in a statically linked executable:
 ~~~c
 #include <ve_offload.h>
 int main()
@@ -90,12 +102,7 @@ int main()
   return 0;
 }
 ~~~
-
-A program using VEO needs to include "ve_offload.h".
-In the header, the prototypes of VEO functions and constants for
-VEO API are defined.
-
-To execute a VE function with VEO:
+To call a VE function in a statically linked executable:
 1. Create a process on a VE node by veo_proc_create_static().
  Specify VE node number and an executable to run on the VE.
  A VEO process handle is returned.
@@ -106,6 +113,40 @@ To execute a VE function with VEO:
 4. Call a VE function by veo_call_async_by_name() with a symbol of a function or a variale
  and a VEO arguments object. A request ID is returned.
 5. Wait for the completion and get the return value by veo_call_wait_result().
+
+The example VH program to call a VE function in a dynamic library with VEO:
+~~~c
+#include <ve_offload.h>
+int main()
+{
+  /* Load "vehello" on VE node 0 */
+  struct veo_proc_handle *proc = veo_proc_create(0);
+  uint64_t handle = veo_load_library(proc, "./libvehello.so");
+  struct veo_thr_ctxt *ctx = veo_context_open(proc);
+
+  struct veo_args *argp = veo_args_alloc();
+  uint64_t id = veo_call_async_by_name(ctx, handle, "hello", argp);
+  uint64_t retval;
+  veo_call_wait_result(ctx, id, &retval);
+  veo_args_free(argp);
+  veo_context_close(ctx);
+  return 0;
+}
+~~~
+To call a VE function in a dynamic library with VEO:
+1. Create a process on a VE node by veo_proc_create().
+ Specify VE node number to create a VE process.
+ A VEO process handle is returned.
+2. Load a VE library and find an address of a function to call.
+ veo_load_library() loads a VE shared library on the VE process.
+3. Create a VEO context, a thread in a VE process specified by a VEO process
+ handle to execute a VE function, by veo_context_open().
+4. Create a VEO arguments object by veo_args_alloc() and set arguments.
+ See the next chapter "Various Arguments for a VE function" in detail.
+5. Call a VE function by veo_call_async_by_name() with the name of a function
+ and a VEO arguments object. 
+ A request ID is returned.
+6. Wait for the completion and get the return value by veo_call_wait_result().
 
 ### Compile VH Main Program
 Compile source code on VH side as shown below.
@@ -126,7 +167,7 @@ $ ./hello
 Hello, world
 ~~~
 
-VE code is executed on VE node 0, specified by `veo_proc_create_static()`.
+VE code is executed on VE node 0, specified by `veo_proc_create_static()` or `veo_proc_create()`.
 
 ## Various Arguments for a VE function
 You can pass one or more arguments to a function on VE.
@@ -185,3 +226,48 @@ The third argument specifies the argument is for input and/or output.
   without copy-in and data is copied out to VH memory on completion.
  - VEO_INTENT_INOUT: the argument is for both input and output;
   data is copied into and out from a VE stack area.
+
+##How to get log file
+Create a file named .log4crc in your home directory.
+Copy the following lines to .log4crc.
+~~~c
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE log4c SYSTEM "">
+
+<log4c>
+        <config>
+                <bufsize>1024</bufsize>
+                <debug level="0"/>
+                <nocleanup>0</nocleanup>
+        </config>
+
+        <category name="veos.veo" priority="DEBUG" appender="veo_appender" />
+        <appender name="veo_appender" layout="ve" type="rollingfile" rollingpolicy="veo_rp" logdir="." prefix="veo.log"/>
+        <rollingpolicy name="veo_rp" type="sizewin" maxsize="4194304" maxnum="10" />
+        <layout name="ve" type="ve_layout"/>
+</log4c>
+~~~
+When VEO program is executed, a log file named veo.log.* is created in the current directory.
+veo.log.* contains VEO and pseudo log.
+If you want to separate VEO and pseudo log, edit .log4crc in your home directory as follows.
+
+~~~c
+        <category name="veos.veo.veo" priority="DEBUG" appender="veo_appender" />
+        <appender name="veo_appender" layout="ve" type="rollingfile" rollingpolicy="veo_rp" logdir="." prefix="veo.log"/>
+        <rollingpolicy name="veo_rp" type="sizewin" maxsize="4194304" maxnum="10" />
+
+        <category name="veos.veo.pseudo" priority="DEBUG" appender="veo_pseudo_appender" />
+        <appender name="veo_pseudo_appender" layout="ve" type="rollingfile" rollingpolicy="veo_pseudo_rp" logdir="." prefix="veo.pseudo.log"/>
+        <rollingpolicy name="veo_pseudo_rp" type="sizewin" maxsize="4194304" maxnum="10" />
+~~~
+
+To separate VEO and pseudo log file:
+1. Change `category name` `"veos.veo"` to `"veos.veo.veo"` and set `priority`.
+ Because VEO supports `"TRACE"`, `"DEBUG"` and `"ERROR"` priorities,
+ you can set `priority` to either `"TRACE"`, `"DEBUG"` or `"ERROR"`.
+2. Add the line `<category name="veos.veo.pseudo" ... />` or below.
+ These lines set the pseudo log parameters.
+
+After .log4crc is edited, a log file named veo.log.* and 
+veo.pseudo.log.* are created in the current directory 
+when VEO program is executed.

@@ -70,6 +70,17 @@ CmdPtr BlockingQueue::wait(uint64_t msgid) {
   }
 }
 
+CmdPtr BlockingQueue::popNoWait() {
+    std::unique_lock<std::mutex> lock(this->mtx);
+    if (!this->queue.empty()) {
+      auto command = std::move(this->queue.front());
+      this->queue.pop_front();
+
+      return command;
+    }
+    return nullptr;
+}
+
 void CommQueue::pushRequest(std::unique_ptr<Command> req)
 {
   this->request.push(std::move(req));
@@ -93,5 +104,16 @@ std::unique_ptr<Command> CommQueue::peekCompletion(uint64_t msgid)
 std::unique_ptr<Command> CommQueue::waitCompletion(uint64_t msgid)
 {
   return this->completion.wait(msgid);
+}
+
+void CommQueue::setCompletion()
+{
+  for(;;) {
+    auto command = this->request.popNoWait();
+    if ( command == nullptr )
+      return;
+    command->setResult(0, VEO_COMMAND_UNFINISHED);
+    this->completion.push(std::move(command));
+  }
 }
 } // namespace veo

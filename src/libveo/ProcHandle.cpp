@@ -14,6 +14,8 @@
 #include <sys/mman.h>
 #include <sys/resource.h>
 #include <sys/shm.h>
+#include <libgen.h>
+
 
 #include <libved.h>
 /* VE OS internal headers */
@@ -32,60 +34,101 @@ extern "C" {
 /* symbols required but undefined in libvepseudo */
 extern __thread veos_handle *g_handle;
 extern struct tid_info global_tid_info[VEOS_MAX_VE_THREADS];
+extern __thread sigset_t ve_proc_sigmask;
 
 int init_stack_veo(veos_handle*, int, char**, char**, struct ve_start_ve_req_cmd *);
+
+
+// copied from pseudo_process.c
+/**
+ * @brief Fetches the node number from VEOS socket file.
+ *
+ * @param[in] s string contains the veos socket file path
+ *
+ * @return node number on which this ve process will run
+ */
+static int get_ve_node_num(char *s)
+{
+        int n = 0;
+
+        while (*s != '\0') {
+                if (std::isdigit(*s))
+                        n = 10*n + (*s - '0');
+                else if (*s == '.')
+                        break;
+
+                s++;
+        }
+        return n;
+}
 
 // copied from pseudo_process.c
 /**
  * @brief Create shared memory region used for system call arguments.
  *
- * @param handle VE OS handle
- * @return shared memory region ID upon success; -1 upon failure.
+ * @param[in] handle VE OS handle
+ * @param[out] node_id Provide the node_id on which this ve process will run
+ * @param[out] sfile_name randomly generated file name with complete path
+ * @return file descriptor of shared memory used for LHM-SHM area 
+ *         upon success; -1 upon failure.
  */
-int init_lhm_shm_area(veos_handle *handle)
+int init_lhm_shm_area(veos_handle *handle, int *node_id, char* sfile_name)
 {
   using veo::VEO_LOG_ERROR;
   using veo::VEO_LOG_DEBUG;
   using veo::VEO_LOG_TRACE;
-  int retval = 0;
+  int retval = -1, fd = -1; 
+  char *base_name = nullptr, *dir_name = nullptr; 
   uint64_t shm_lhm_area = 0;
   veo::ThreadContext *ctx = nullptr;
   VEO_TRACE(ctx, "Entering %s", __func__);
 
-  /* Allocate shared memory segment */
-  retval = shmget(getpid(), PAGE_SIZE_4KB, IPC_CREAT|S_IRWXU);
-  if (-1 == retval) {
-    VEO_DEBUG(ctx, "Failed to get shared memory (errno=%d)", errno);
-    goto out_error1;
+  std::unique_ptr<char[]> tmp_sock0(new char[NAME_MAX+PATH_MAX]);
+  std::unique_ptr<char[]> tmp_sock1(new char[NAME_MAX+PATH_MAX]);
+  std::unique_ptr<char[]> shared_tmp_file(new char[NAME_MAX+PATH_MAX]);
+
+  strncpy(tmp_sock0.get(), handle->veos_sock_name, NAME_MAX+PATH_MAX);
+  strncpy(tmp_sock1.get(), handle->veos_sock_name, NAME_MAX+PATH_MAX);
+  base_name = basename(tmp_sock0.get());
+  dir_name = dirname(tmp_sock1.get());
+
+  /* get node number from veos socket file basename */
+  *node_id = get_ve_node_num(base_name);
+  sprintf(shared_tmp_file.get(), "%s/veos%d-tmp/ve_exec_XXXXXX", dir_name, *node_id);
+
+  VEO_DEBUG(ctx, "Shared file path: %s", shared_tmp_file.get());
+
+  /* create a unique temporary file and opens it */
+  fd = mkstemp(shared_tmp_file.get());
+  if (fd < 0) {
+    VEO_DEBUG(ctx, "mkstemp fails: %s", strerror(errno));
+    goto hndl_return;
   }
 
-  /* Attach to the above allocated shared memory segment */
-  shm_lhm_area = (uint64_t)shmat(retval, NULL, 0);
+  /* truncate file to size PAGE_SIZE_4KB */
+  retval = ftruncate(fd, PAGE_SIZE_4KB);
+  if (-1 == retval) {
+    VEO_DEBUG(ctx, "ftruncate fails: %s", strerror(errno));
+    goto hndl_return;
+  }
+
+  /* map the file in shared mode */
+  shm_lhm_area = (uint64_t)mmap(NULL, PAGE_SIZE_4KB, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
   if ((void *)-1 == (void *)(shm_lhm_area)) {
-    VEO_DEBUG(ctx, "Failed to attach shared memory (errno=%d)", errno);
+    VEO_DEBUG(ctx, "Failed to map file, return value %s", strerror(errno));
     retval = -1;
-    goto out_error;
+    goto hndl_return;
   }
 
   VEO_DEBUG(ctx, "%lx", shm_lhm_area);
-
-  /* stay on memory until the process exits */
-  if (-1 == mlock((void *)shm_lhm_area, PAGE_SIZE_4KB)) {
-    VEO_ERROR(ctx, "Failed to lock memory (errno=%d)", errno);
-    retval = -1;
-    goto out_error1;
-  }
   memset((void *)shm_lhm_area, 0, PAGE_SIZE_4KB);
-
   vedl_set_shm_lhm_addr(handle->ve_handle, (void *)shm_lhm_area);
-out_error:
-  /* Mark shared memory segment as destroyed */
-  if (-1 == shmctl(retval, IPC_RMID, NULL)) {
-    VEO_DEBUG(ctx, "Failed to destroy shared memory (errno=%d)", errno);
-    retval = -1;
-  }
-out_error1:
-  VEO_TRACE(ctx, "Exiting %s", __func__);
+  strncpy(sfile_name, shared_tmp_file.get(), NAME_MAX+PATH_MAX);
+  VEO_DEBUG(ctx, "Unique syscall args filename: %s", sfile_name);
+  retval = fd;
+
+hndl_return:
+  PSEUDO_TRACE("Exiting");
   return retval;
 }
 
@@ -106,6 +149,11 @@ void pseudo_abort()
 #endif
 
 namespace veo {
+namespace internal {
+  std::mutex spawn_mtx;
+  unsigned int proc_no;
+}
+
 /**
  * @brief Initializes rwlock on DMA and fork
  *
@@ -151,6 +199,23 @@ void init_rwlock_to_sync_dma_fork()
 }
 
 /**
+ * @brief close the fd of syscall args file and remove the file.
+ *
+ * @param[in] fd, contains the fd of syscall args file.
+ * @param[in] sfile_name string contains the syscall args file path.
+ */
+void close_syscall_args_file(int fd, char *sfile_name)
+{
+        PSEUDO_TRACE("Entering");
+
+        close(fd);
+        unlink(sfile_name);
+        // free(sfile_name);
+
+        PSEUDO_TRACE("Exiting");
+}
+
+/**
  * @brief create a VE process and initialize a thread context
  *
  * @param[in,out] ctx the thread context of the main thread
@@ -159,27 +224,43 @@ void init_rwlock_to_sync_dma_fork()
  */
 int spawn_helper(ThreadContext *ctx, veos_handle *oshandle, const char *binname)
 {
+  class Finally {
+    sigset_t saved_mask;
+  public:
+    Finally() {
+      sigset_t mask;
+      sigfillset(&mask);
+      sigprocmask(SIG_BLOCK, &mask, &this->saved_mask);
+      memcpy(&ve_proc_sigmask, &this->saved_mask, sizeof(this->saved_mask));
+    }
+    ~Finally() {
+      // restore the signal mask of main thread on returning from spawn_helper.
+      sigprocmask(SIG_SETMASK, &this->saved_mask, nullptr);
+    }
+  } finally_;
+
   /* necessary to allocate PATH_MAX because VE OS requests to
    * transfer PATH_MAX. */
   char helper_name[PATH_MAX];
   strncpy(helper_name, binname, sizeof(helper_name));
+  int core_id, node_id, numa_node;
+  char *file_name = nullptr;
+  int ret = -1;
+  std::unique_ptr<char[]> sfile_name(new char[NAME_MAX+PATH_MAX]);
 
-  int rv = -1;
   // libvepseudo touches PTRACE_PRIVATE_DATA area.
   void *ptrace_private = mmap((void *)PTRACE_PRIVATE_DATA, 4096,
                               PROT_READ|PROT_WRITE,
                               MAP_ANON|MAP_PRIVATE|MAP_FIXED, -1, 0);
   int saved_errno = errno;
   if (MAP_FAILED == ptrace_private) {
-    PSEUDO_DEBUG("Fail to alloc chunk for ptrace private: %s",
-      strerror(errno));
+    VEO_DEBUG(ctx, "Fail to alloc chunk for ptrace private: %s", strerror(errno));
     throw VEOException("Failled to allocate ptrace related data", saved_errno);
   }
 
   /* Check if the request address is obtained or not */
   if (ptrace_private != (void *)PTRACE_PRIVATE_DATA) {
-    PSEUDO_DEBUG("Request: %lx but got: %p for ptrace data.",
-      PTRACE_PRIVATE_DATA, ptrace_private);
+    VEO_DEBUG(ctx, "Request: %lx but got: %p for ptrace data.", PTRACE_PRIVATE_DATA, ptrace_private);
     munmap(ptrace_private, 4096);
     throw VEOException("Failled to allocate ptrace related data", saved_errno);
   }
@@ -195,42 +276,51 @@ int spawn_helper(ThreadContext *ctx, veos_handle *oshandle, const char *binname)
   global_tid_info[0].mutex = PTHREAD_MUTEX_INITIALIZER;
   global_tid_info[0].cond = PTHREAD_COND_INITIALIZER;
   init_rwlock_to_sync_dma_fork();
+
   // Initialize the syscall argument area.
-  rv = init_lhm_shm_area(oshandle);
-  if (rv < 0) {
-    throw VEOException("failed to create shared memory region.", 0);
+  ret = init_lhm_shm_area(oshandle, &node_id, sfile_name.get());
+  if (ret < 0) {
+    throw VEOException("failed to create temporary file.", 0);
   }
+
   // Request VE OS to create a new VE process
   new_ve_proc ve_proc = {0};
   // TODO: set resource limit.
   memset(&ve_proc.lim, -1, sizeof(ve_proc.lim));
-  ve_proc.gid = getgid();
-  ve_proc.uid = getuid();
+  ve_proc.namespace_pid = syscall(SYS_gettid);
   ve_proc.shm_lhm_addr = (uint64_t)vedl_get_shm_lhm_addr(oshandle->ve_handle);
-  ve_proc.shmid = rv;
   ve_proc.core_id = -1;
+  ve_proc.node_id = node_id;
   ve_proc.traced_proc = 0;
   ve_proc.tracer_pid = getppid();
   ve_proc.exec_path = (uint64_t)helper_name;
+  ve_proc.numa_node = -1;
+  file_name = basename(sfile_name.get());
   auto exe_name_buf = strdup(binname);
   auto exe_base_name = basename(exe_name_buf);
   memset(ve_proc.exe_name, '\0', ACCT_COMM + 1);
   strncpy(ve_proc.exe_name, exe_base_name, ACCT_COMM);
+  strncpy(ve_proc.sfile_name, file_name, S_FILE_LEN); 
   free(exe_name_buf);
 
   int retval = pseudo_psm_send_new_ve_process(oshandle->veos_sock_fd, ve_proc);
   if (0 > retval) {
+    close_syscall_args_file(ret, sfile_name.get());
     VEO_ERROR(ctx, "Failed to send NEW VE PROC request (%d)", retval);
     return retval;
   }
-  int core_id, node_id;
   retval = pseudo_psm_recv_load_binary_req(oshandle->veos_sock_fd,
-                                           &core_id, &node_id);
+                                           &core_id, &node_id, &numa_node);
+  VEO_DEBUG(ctx, "CORE ID : %d\t NODE ID : %d NUMA NODE ID : %d", core_id, node_id, numa_node);
   if (0 > retval) {
+    close_syscall_args_file(ret, sfile_name.get());
     VEO_ERROR(ctx, "VEOS acknowledgement error (%d)", retval);
     return retval;
   }
-  VEO_DEBUG(ctx, "CORE ID: %d\t NODE ID: %d", core_id, node_id);
+
+  /* close the fd of syscall args file and remove the file */
+  close_syscall_args_file(ret, sfile_name.get());
+
   vedl_set_syscall_area_offset(oshandle->ve_handle, 0);
 
   // initialize VEMVA space
@@ -288,6 +378,7 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
                        const char *binname)
 {
   int retval;
+
   // open VE OS handle
   veos_handle *os_handle = veos_handle_create(const_cast<char *>(vedev),
                              const_cast<char *>(ossock), nullptr, -1);
@@ -298,10 +389,17 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
   // initialize the main thread context
   this->main_thread.reset(new ThreadContext(this, os_handle, true));
 
+  std::lock_guard<std::mutex> lock(internal::spawn_mtx);
+  if (internal::proc_no != 0) {
+    veos_handle_free(os_handle);
+    throw VEOException("The creation of a VE process failed.", 0);
+  }
   if (spawn_helper(this->main_thread.get(), os_handle, binname) != 0) {
     veos_handle_free(os_handle);
     throw VEOException("The creation of a VE process failed.", 0);
   }
+  ++internal::proc_no;  
+
   // VE process is ready here. The state is changed to RUNNING.
   this->main_thread->state = VEO_STATE_RUNNING;
 
@@ -310,8 +408,7 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
   // VE process is to stop at the first block here.
   // sysve(VEO_BLOCK, &veo__helper_functions);
   uint64_t funcs_addr = this->main_thread->_collectReturnValue();
-  VEO_DEBUG(this->main_thread.get(), "helper functions set: %p\n",
-            (void *)funcs_addr);
+  VEO_DEBUG(this->main_thread.get(), "helper functions set: %p\n", (void *)funcs_addr);
   int rv = ve_recv_data(os_handle, funcs_addr, sizeof(this->funcs),
                         &this->funcs);
   if (rv != 0) {
@@ -342,6 +439,9 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
   this->worker.reset(new ThreadContext(this, this->osHandle()));
   // handle clone() request.
   auto tid = this->worker->handleCloneRequest();
+  if ( tid < 0 ) {
+    VEO_ERROR(this->worker.get(), "worker->handleCloneRequest() failed. (errno = %d)", -tid);
+  }
   // restart execution; execute until the next block request.
   this->main_thread->_unBlock(tid);
   this->waitForBlock();
@@ -401,18 +501,24 @@ uint64_t ProcHandle::getSym(const uint64_t libhdl, const char *symname)
   args.set(0, libhdl);
   args.setOnStack(VEO_INTENT_IN, 1, const_cast<char *>(symname), len + 1);
   sym_mtx.lock();
-  auto itr = sym_name.find(symname);
+  auto sym_pair = std::make_pair(libhdl, symname);
+  auto itr = sym_name.find(sym_pair);
   if( itr != sym_name.end() ) {
     sym_mtx.unlock();
     VEO_TRACE(this->worker.get(), "symbol addr = %#lx", itr->second);
+    VEO_TRACE(this->worker.get(), "symbol name = %s", symname);
     return itr->second;
   }
   sym_mtx.unlock();
   uint64_t symaddr = doOnContext(this->worker.get(),
                                  this->funcs.find_sym, args);
   VEO_TRACE(this->worker.get(), "symbol addr = %#lx", symaddr);
+  VEO_TRACE(this->worker.get(), "symbol name = %s", symname);
+  if (symaddr == NULL) {
+    return symaddr;
+  }
   sym_mtx.lock();
-  sym_name[symname] = symaddr;
+  sym_name[sym_pair] = symaddr;
   sym_mtx.unlock();
   return symaddr;
 }

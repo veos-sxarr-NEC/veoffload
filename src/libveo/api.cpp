@@ -220,7 +220,13 @@ uint64_t veo_get_sym(veo_proc_handle *proc, uint64_t libhdl,
 veo_thr_ctxt *veo_context_open(veo_proc_handle *proc)
 {
   try {
-    return ProcHandleFromC(proc)->openContext()->toCHandle();
+    veo_thr_ctxt *ctx = ProcHandleFromC(proc)->openContext()->toCHandle();
+    auto rv = reinterpret_cast<intptr_t>(ctx);
+    if ( rv < 0 ) {
+      errno = -rv;
+      return NULL;
+    }
+    return ctx;
   } catch (VEOException &e) {
     VEO_ERROR(nullptr, "failed to open context: %s", e.what());
     errno = e.err();
@@ -331,6 +337,7 @@ int veo_call_peek_result(veo_thr_ctxt *ctx, uint64_t reqid, uint64_t *retp)
  * @retval VEO_COMMAND_OK function is successfully returned.
  * @retval VEO_COMMAND_EXCEPTION an exception occurred on execution.
  * @retval VEO_COMMAND_ERROR an error occurred on execution.
+ * @retval VEO_COMMAND_UNFINISHED function is not finished.
  * @retval -1 internal error.
  */
 int veo_call_wait_result(veo_thr_ctxt *ctx, uint64_t reqid, uint64_t *retp)
@@ -568,11 +575,10 @@ int veo_args_set_float(veo_args *ca, int argnum, float val)
  * The buffer is copied to the stack and will look to the VE callee like a
  * local variable of the caller function. It is currently erased right after
  * the call returns, thus only intent IN args passing is supported. Use this
- * to call by reference (eg. Fortran functions) or pass structures to the VE
- * "kernel" function. The size of arguments passed on the stack is limited to
- * 63MB, since the size of the initial stack is 64MB. Try staying well below
- * this value, allocate and use memory buffers on heap when you have huge
- * argument arrays to pass.
+ * to pass structures to the VE "kernel" function. The size of arguments 
+ * passed on the stack is limited to 63MB, since the size of the initial 
+ * stack is 64MB. Try staying well below this value, allocate and use memory
+ * buffers on heap when you have huge argument arrays to pass.
  */
 int veo_args_set_stack(veo_args *ca, enum veo_args_intent inout,
                        int argnum, char *buff, size_t len)
