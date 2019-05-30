@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>VE Offloading (EXPERIMENTAL): Getting Started with VEO</title>
+<title>VE Offloading: Getting Started with VEO</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -24,7 +24,8 @@
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">VE Offloading (EXPERIMENTAL)
+   <div id="projectname">VE Offloading
+   &#160;<span id="projectnumber">2.1.0</span>
    </div>
   </td>
  </tr>
@@ -78,11 +79,17 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 </div><!-- fragment --><p>Save the above code as libvehello.c.</p>
 <p>A function on VE called via VEO needs to return a 64-bit unsigned integer. A function on VE called via VEO can have arguments as mentioned later.</p>
 <h3>Compile VE Code</h3>
-<p>To execute a function on VE using VEO, compile and link the source file into an executable for VEO.</p>
+<p>VEO supports a function in an executable or in a shared library.</p>
+<p>To execute a function on VE using VEO, compile and link a source file into a binary for VE.</p>
+<p>To build an executable with the functions statically linked, execute as follows: </p>
 <div class="fragment"><div class="line">$ /opt/nec/ve/bin/ncc -c -o libvehello.o libvehello.c</div>
-<div class="line">$ /opt/nec/ve/libexec/mk_veorun_static vehello libvehello.o -pthread -ldl</div>
+<div class="line">$ /opt/nec/ve/bin/mk_veorun_static -o vehello libvehello.o</div>
+</div><!-- fragment --><p> To build a shared library with the functions for dynamic loading, execute as follows: </p>
+<div class="fragment"><div class="line">$ /opt/nec/ve/bin/ncc -fpic -shared -o libvehello.so libvehello.c</div>
 </div><!-- fragment --><h3>VH Main Program</h3>
-<p>Main routine to run VE program is shown below.</p>
+<p>Main routine on VH side to run VE program is shown here.</p>
+<p>A program using VEO needs to include "ve_offload.h". In the header, the prototypes of VEO functions and constants for VEO API are defined.</p>
+<p>The example VH program to call a VE function in a statically linked executable: </p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;ve_offload.h&gt;</span></div>
 <div class="line"><span class="keywordtype">int</span> main()</div>
 <div class="line">{</div>
@@ -100,13 +107,38 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <div class="line">  <a class="code" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close</a>(ctx);</div>
 <div class="line">  <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><p>A program using VEO needs to include "ve_offload.h". In the header, the prototypes of VEO functions and constants for VEO API are defined.</p>
-<p>To execute a VE function with VEO:</p>
+</div><!-- fragment --><p> To call a VE function in a statically linked executable:</p>
 <ol type="1">
 <li>Create a process on a VE node by <a class="el" href="group__veoapi.html#ga530f674447a56261f0a75891f3a60913" title="create a VE process with non-default veorun binary ">veo_proc_create_static()</a>. Specify VE node number and an executable to run on the VE. A VEO process handle is returned.</li>
 <li>Create a VEO context, a thread in a VE process specified by a VEO process handle to execute a VE function, by <a class="el" href="group__veoapi.html#ga8752c03fee0f7f200227a43cfd50f84c" title="open a VEO context ">veo_context_open()</a>.</li>
 <li>Create a VEO arguments object by <a class="el" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc()</a> and set arguments. See the next chapter "Various Arguments for a VE function" in detail.</li>
 <li>Call a VE function by <a class="el" href="group__veoapi.html#ga1999d72380998381df067cfcd9213030" title="request a VE thread to call a function ">veo_call_async_by_name()</a> with a symbol of a function or a variale and a VEO arguments object. A request ID is returned.</li>
+<li>Wait for the completion and get the return value by <a class="el" href="group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb" title="pick up a resutl from VE function ">veo_call_wait_result()</a>.</li>
+</ol>
+<p>The example VH program to call a VE function in a dynamic library with VEO: </p>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;ve_offload.h&gt;</span></div>
+<div class="line"><span class="keywordtype">int</span> main()</div>
+<div class="line">{</div>
+<div class="line">  <span class="comment">/* Load &quot;vehello&quot; on VE node 0 */</span></div>
+<div class="line">  <span class="keyword">struct </span>veo_proc_handle *proc = <a class="code" href="group__veoapi.html#ga6193ffeb9a3ac5c34ce666ea652e6daa" title="create a VE process ">veo_proc_create</a>(0);</div>
+<div class="line">  uint64_t handle = <a class="code" href="group__veoapi.html#ga3e17de75677bfb4bf8cf4b0a5a8031ab" title="load a VE library ">veo_load_library</a>(proc, <span class="stringliteral">&quot;./libvehello.so&quot;</span>);</div>
+<div class="line">  <span class="keyword">struct </span>veo_thr_ctxt *ctx = <a class="code" href="group__veoapi.html#ga8752c03fee0f7f200227a43cfd50f84c" title="open a VEO context ">veo_context_open</a>(proc);</div>
+<div class="line"></div>
+<div class="line">  <span class="keyword">struct </span>veo_args *argp = <a class="code" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc</a>();</div>
+<div class="line">  uint64_t <span class="keywordtype">id</span> = <a class="code" href="group__veoapi.html#ga1999d72380998381df067cfcd9213030" title="request a VE thread to call a function ">veo_call_async_by_name</a>(ctx, handle, <span class="stringliteral">&quot;hello&quot;</span>, argp);</div>
+<div class="line">  uint64_t retval;</div>
+<div class="line">  <a class="code" href="group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb" title="pick up a resutl from VE function ">veo_call_wait_result</a>(ctx, <span class="keywordtype">id</span>, &amp;retval);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#ga3896858cc2ef3417c00843a3cd84b760" title="free VEO arguments object ">veo_args_free</a>(argp);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close</a>(ctx);</div>
+<div class="line">  <span class="keywordflow">return</span> 0;</div>
+<div class="line">}</div>
+</div><!-- fragment --><p> To call a VE function in a dynamic library with VEO:</p>
+<ol type="1">
+<li>Create a process on a VE node by <a class="el" href="group__veoapi.html#ga6193ffeb9a3ac5c34ce666ea652e6daa" title="create a VE process ">veo_proc_create()</a>. Specify VE node number to create a VE process. A VEO process handle is returned.</li>
+<li>Load a VE library and find an address of a function to call. <a class="el" href="group__veoapi.html#ga3e17de75677bfb4bf8cf4b0a5a8031ab" title="load a VE library ">veo_load_library()</a> loads a VE shared library on the VE process.</li>
+<li>Create a VEO context, a thread in a VE process specified by a VEO process handle to execute a VE function, by <a class="el" href="group__veoapi.html#ga8752c03fee0f7f200227a43cfd50f84c" title="open a VEO context ">veo_context_open()</a>.</li>
+<li>Create a VEO arguments object by <a class="el" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc()</a> and set arguments. See the next chapter "Various Arguments for a VE function" in detail.</li>
+<li>Call a VE function by <a class="el" href="group__veoapi.html#ga1999d72380998381df067cfcd9213030" title="request a VE thread to call a function ">veo_call_async_by_name()</a> with the name of a function and a VEO arguments object. A request ID is returned.</li>
 <li>Wait for the completion and get the return value by <a class="el" href="group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb" title="pick up a resutl from VE function ">veo_call_wait_result()</a>.</li>
 </ol>
 <h3>Compile VH Main Program</h3>
@@ -118,7 +150,7 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <p>Execute the compiled VEO program.</p>
 <div class="fragment"><div class="line">$ ./hello</div>
 <div class="line">Hello, world</div>
-</div><!-- fragment --><p>VE code is executed on VE node 0, specified by <code><a class="el" href="group__veoapi.html#ga530f674447a56261f0a75891f3a60913" title="create a VE process with non-default veorun binary ">veo_proc_create_static()</a></code>.</p>
+</div><!-- fragment --><p>VE code is executed on VE node 0, specified by <code><a class="el" href="group__veoapi.html#ga530f674447a56261f0a75891f3a60913" title="create a VE process with non-default veorun binary ">veo_proc_create_static()</a></code> or <code><a class="el" href="group__veoapi.html#ga6193ffeb9a3ac5c34ce666ea652e6daa" title="create a VE process ">veo_proc_create()</a></code>.</p>
 <h2>Various Arguments for a VE function</h2>
 <p>You can pass one or more arguments to a function on VE. To specify arguments, VEO arguments object is used. A VEO argument object is created by <a class="el" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc()</a>. When a VEO argument object is created, the VEO argument object is empty, without any arguments passed. Even if a VE function has no arguments, a VEO arguments object is still necessary.</p>
 <p>VEO provides functions to set an argument in various types.</p>
@@ -146,8 +178,39 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <ul>
 <li>VEO_INTENT_IN: the argument is for input; data is copied into a VE stack on call.</li>
 <li>VEO_INTENT_OUT: the argument is for output; a VE stack area is allocated without copy-in and data is copied out to VH memory on completion.</li>
-<li>VEO_INTENT_INOUT: the argument is for both input and output; data is copied into and out from a VE stack area. </li>
+<li>VEO_INTENT_INOUT: the argument is for both input and output; data is copied into and out from a VE stack area.</li>
 </ul>
+<h2>How to get log file</h2>
+<p>Create a file named .log4crc in your home directory. Copy the following lines to .log4crc. </p>
+<div class="fragment"><div class="line">&lt;?xml version=<span class="stringliteral">&quot;1.0&quot;</span> encoding=<span class="stringliteral">&quot;ISO-8859-1&quot;</span>?&gt;</div>
+<div class="line">&lt;!DOCTYPE log4c SYSTEM <span class="stringliteral">&quot;&quot;</span>&gt;</div>
+<div class="line"></div>
+<div class="line">&lt;log4c&gt;</div>
+<div class="line">        &lt;config&gt;</div>
+<div class="line">                &lt;bufsize&gt;1024&lt;/bufsize&gt;</div>
+<div class="line">                &lt;debug level=<span class="stringliteral">&quot;0&quot;</span>/&gt;</div>
+<div class="line">                &lt;nocleanup&gt;0&lt;/nocleanup&gt;</div>
+<div class="line">        &lt;/config&gt;</div>
+<div class="line"></div>
+<div class="line">        &lt;category name=<span class="stringliteral">&quot;veos.veo&quot;</span> priority=<span class="stringliteral">&quot;DEBUG&quot;</span> appender=<span class="stringliteral">&quot;veo_appender&quot;</span> /&gt;</div>
+<div class="line">        &lt;appender name=<span class="stringliteral">&quot;veo_appender&quot;</span> layout=<span class="stringliteral">&quot;ve&quot;</span> type=<span class="stringliteral">&quot;rollingfile&quot;</span> rollingpolicy=<span class="stringliteral">&quot;veo_rp&quot;</span> logdir=<span class="stringliteral">&quot;.&quot;</span> prefix=<span class="stringliteral">&quot;veo.log&quot;</span>/&gt;</div>
+<div class="line">        &lt;rollingpolicy name=<span class="stringliteral">&quot;veo_rp&quot;</span> type=<span class="stringliteral">&quot;sizewin&quot;</span> maxsize=<span class="stringliteral">&quot;4194304&quot;</span> maxnum=<span class="stringliteral">&quot;10&quot;</span> /&gt;</div>
+<div class="line">        &lt;layout name=<span class="stringliteral">&quot;ve&quot;</span> type=<span class="stringliteral">&quot;ve_layout&quot;</span>/&gt;</div>
+<div class="line">&lt;/log4c&gt;</div>
+</div><!-- fragment --><p> When VEO program is executed, a log file named veo.log.* is created in the current directory. veo.log.* contains VEO and pseudo log. If you want to separate VEO and pseudo log, edit .log4crc in your home directory as follows.</p>
+<div class="fragment"><div class="line">&lt;category name=<span class="stringliteral">&quot;veos.veo.veo&quot;</span> priority=<span class="stringliteral">&quot;DEBUG&quot;</span> appender=<span class="stringliteral">&quot;veo_appender&quot;</span> /&gt;</div>
+<div class="line">&lt;appender name=<span class="stringliteral">&quot;veo_appender&quot;</span> layout=<span class="stringliteral">&quot;ve&quot;</span> type=<span class="stringliteral">&quot;rollingfile&quot;</span> rollingpolicy=<span class="stringliteral">&quot;veo_rp&quot;</span> logdir=<span class="stringliteral">&quot;.&quot;</span> prefix=<span class="stringliteral">&quot;veo.log&quot;</span>/&gt;</div>
+<div class="line">&lt;rollingpolicy name=<span class="stringliteral">&quot;veo_rp&quot;</span> type=<span class="stringliteral">&quot;sizewin&quot;</span> maxsize=<span class="stringliteral">&quot;4194304&quot;</span> maxnum=<span class="stringliteral">&quot;10&quot;</span> /&gt;</div>
+<div class="line"></div>
+<div class="line">&lt;category name=<span class="stringliteral">&quot;veos.veo.pseudo&quot;</span> priority=<span class="stringliteral">&quot;DEBUG&quot;</span> appender=<span class="stringliteral">&quot;veo_pseudo_appender&quot;</span> /&gt;</div>
+<div class="line">&lt;appender name=<span class="stringliteral">&quot;veo_pseudo_appender&quot;</span> layout=<span class="stringliteral">&quot;ve&quot;</span> type=<span class="stringliteral">&quot;rollingfile&quot;</span> rollingpolicy=<span class="stringliteral">&quot;veo_pseudo_rp&quot;</span> logdir=<span class="stringliteral">&quot;.&quot;</span> prefix=<span class="stringliteral">&quot;veo.pseudo.log&quot;</span>/&gt;</div>
+<div class="line">&lt;rollingpolicy name=<span class="stringliteral">&quot;veo_pseudo_rp&quot;</span> type=<span class="stringliteral">&quot;sizewin&quot;</span> maxsize=<span class="stringliteral">&quot;4194304&quot;</span> maxnum=<span class="stringliteral">&quot;10&quot;</span> /&gt;</div>
+</div><!-- fragment --><p>To separate VEO and pseudo log file:</p>
+<ol type="1">
+<li>Change <code>category name</code> <code>"veos.veo"</code> to <code>"veos.veo.veo"</code> and set <code>priority</code>. Because VEO supports <code>"TRACE"</code>, <code>"DEBUG"</code> and <code>"ERROR"</code> priorities, you can set <code>priority</code> to either <code>"TRACE"</code>, <code>"DEBUG"</code> or <code>"ERROR"</code>.</li>
+<li>Add the line <code>&lt;category name="veos.veo.pseudo" ... /&gt;</code> or below. These lines set the pseudo log parameters.</li>
+</ol>
+<p>After .log4crc is edited, a log file named veo.log.* and veo.pseudo.log.* are created in the current directory when VEO program is executed. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

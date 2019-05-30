@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.5"/>
-<title>VE Offloading (EXPERIMENTAL): VEO API</title>
+<title>VE Offloading: VEO API</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -24,7 +24,8 @@
  <tbody>
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
-   <div id="projectname">VE Offloading (EXPERIMENTAL)
+   <div id="projectname">VE Offloading
+   &#160;<span id="projectnumber">2.1.0</span>
    </div>
   </td>
  </tr>
@@ -166,7 +167,6 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">const int veo_api_version </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
@@ -717,6 +717,7 @@ Functions</h2></td></tr>
     <tr><td class="paramname">VEO_COMMAND_OK</td><td>function is successfully returned. </td></tr>
     <tr><td class="paramname">VEO_COMMAND_EXCEPTION</td><td>an exception occurred on execution. </td></tr>
     <tr><td class="paramname">VEO_COMMAND_ERROR</td><td>an error occurred on execution. </td></tr>
+    <tr><td class="paramname">VEO_COMMAND_UNFINISHED</td><td>function is not finished. </td></tr>
     <tr><td class="paramname">-1</td><td>internal error. </td></tr>
   </table>
   </dd>
@@ -1371,7 +1372,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<p>The buffer is copied to the stack and will look to the VE callee like a local variable of the caller function. It is currently erased right after the call returns, thus only intent IN args passing is supported. Use this to call by reference (eg. Fortran functions) or pass structures to the VE "kernel" function. The size of arguments passed on the stack is limited to 63MB, since the size of the initial stack is 64MB. Try staying well below this value, allocate and use memory buffers on heap when you have huge argument arrays to pass. </p>
+<p>The buffer is copied to the stack and will look to the VE callee like a local variable of the caller function. It is currently erased right after the call returns, thus only intent IN args passing is supported. Use this to pass structures to the VE "kernel" function. The size of arguments passed on the stack is limited to 63MB, since the size of the initial stack is 64MB. Try staying well below this value, allocate and use memory buffers on heap when you have huge argument arrays to pass. </p>
 
 </div>
 </div>
@@ -1430,7 +1431,6 @@ Functions</h2></td></tr>
         <tr>
           <td class="memname">const char* veo_version_string </td>
           <td>(</td>
-          <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>

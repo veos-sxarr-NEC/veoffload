@@ -1,23 +1,16 @@
 var NAVTREE =
 [
-  [ "VE Offloading (EXPERIMENTAL)", "index.html", [
+  [ "VE Offloading", "index.html", [
     [ "Introduction", "index.html", null ],
     [ "Getting Started with VEO", "md_GettingStarted.html", null ],
-    [ "Modules", "modules.html", "modules" ],
-    [ "Data Structures", null, [
-      [ "Data Structures", "annotated.html", "annotated" ],
-      [ "Class Hierarchy", "hierarchy.html", "hierarchy" ],
-      [ "Data Fields", "functions.html", [
-        [ "All", "functions.html", null ],
-        [ "Functions", "functions_func.html", null ]
-      ] ]
-    ] ]
+    [ "Restriction", "md_Restriction.html", null ],
+    [ "Modules", "modules.html", "modules" ]
   ] ]
 ];
 
 var NAVTREEINDEX =
 [
-".html"
+"group__veoapi.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
