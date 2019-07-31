@@ -100,6 +100,24 @@ int main()
 	printf("VH: out2 = %f (%#08x)\n", (double)out2, u.x);
 	printf("VH: out8 = %s\n", out8);
 
+    arg = veo_args_alloc();
+    veo_args_set_i16(arg, 0, -2);
+    veo_args_set_u16(arg, 1, 0xa0a0a0a0);
+    uint64_t sym_16 = veo_get_sym(proc, handle, "test_16");
+    printf("symbol address (test_16) = %p\n", sym_16);
+    uint64_t req_16 = veo_call_async(ctx, sym_16, arg);
+    ret = veo_call_wait_result(ctx, req_16, &retval);
+    veo_args_free(arg);
+
+    arg = veo_args_alloc();
+    veo_args_set_i8(arg, 0, -2);
+    veo_args_set_u8(arg, 1, 0xa0a0a0a0);
+    uint64_t sym_8 = veo_get_sym(proc, handle, "test_8");
+    printf("symbol address (test_8) = %p\n", sym_8);
+    uint64_t req_8 = veo_call_async(ctx, sym_8, arg);
+    ret = veo_call_wait_result(ctx, req_8, &retval);
+    veo_args_free(arg);
+
 	veo_context_close(ctx);
 	return 0;
 }

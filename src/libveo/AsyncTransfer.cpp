@@ -27,8 +27,6 @@ uint64_t ThreadContext::asyncReadMem(void *dst, uint64_t src, size_t size)
     return rv;
   };
   std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
-
-//  return this->comq.pushRequest(std::move(req), this);
   this->comq.pushRequest(std::move(req));
   return id;
 }
@@ -46,8 +44,6 @@ uint64_t ThreadContext::asyncWriteMem(uint64_t dst, const void *src,
     return rv;
   };
   std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
-
-//  return this->comq.pushRequest(std::move(req), this);
   this->comq.pushRequest(std::move(req));
   return id;
 }

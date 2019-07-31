@@ -536,6 +536,58 @@ int veo_args_set_u32(veo_args *ca, int argnum, uint32_t val)
 }
 
 /**
+ * @brief set a 16-bit integer argument
+ *
+ * @param ca veo_args
+ * @param argnum the argnum-th argument
+ * @param val value to be set
+ * @return zero upon success; negative upon failure.
+ */
+int veo_args_set_i16(veo_args *ca, int argnum, int16_t val)
+{
+  return veo_args_set_(ca, argnum, val);
+}
+
+/**
+ * @brief set a 16-bit unsigned integer argument
+ *
+ * @param ca veo_args
+ * @param argnum the argnum-th argument
+ * @param val value to be set
+ * @return zero upon success; negative upon failure.
+ */
+int veo_args_set_u16(veo_args *ca, int argnum, uint16_t val)
+{
+  return veo_args_set_(ca, argnum, val);
+}
+
+/**
+ * @brief set a 8-bit integer argument
+ *
+ * @param ca veo_args
+ * @param argnum the argnum-th argument
+ * @param val value to be set
+ * @return zero upon success; negative upon failure.
+ */
+int veo_args_set_i8(veo_args *ca, int argnum, int8_t val)
+{
+  return veo_args_set_(ca, argnum, val);
+}
+
+/**
+ * @brief set a 8-bit unsigned integer argument
+ *
+ * @param ca veo_args
+ * @param argnum the argnum-th argument
+ * @param val value to be set
+ * @return zero upon success; negative upon failure.
+ */
+int veo_args_set_u8(veo_args *ca, int argnum, uint8_t val)
+{
+  return veo_args_set_(ca, argnum, val);
+}
+
+/**
  * @brief set a double precision floating point number argument
  *
  * @param ca veo_args

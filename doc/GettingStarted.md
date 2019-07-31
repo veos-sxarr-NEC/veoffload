@@ -102,6 +102,8 @@ int main()
   return 0;
 }
 ~~~
+Save the above code as hello.c.
+
 To call a VE function in a statically linked executable:
 1. Create a process on a VE node by veo_proc_create_static().
  Specify VE node number and an executable to run on the VE.
@@ -188,6 +190,11 @@ int veo_args_set_i64(struct veo_args *args, int argnum, int64_t val);
 int veo_args_set_u64(struct veo_args *args, int argnum, uint64_t val);
 int veo_args_set_i32(struct veo_args *args, int argnum, int32_t val);
 int veo_args_set_u32(struct veo_args *args, int argnum, uint32_t val);
+int veo_args_set_i16(struct veo_args *args, int argnum, int16_t val);
+int veo_args_set_u16(struct veo_args *args, int argnum, uint16_t val);
+int veo_args_set_i8(struct veo_args *args, int argnum, int8_t val);
+int veo_args_set_u8(struct veo_args *args, int argnum, uint8_t val);
+
 ~~~
 
 You can pass also a floating point number argument.
@@ -226,6 +233,101 @@ The third argument specifies the argument is for input and/or output.
   without copy-in and data is copied out to VH memory on completion.
  - VEO_INTENT_INOUT: the argument is for both input and output;
   data is copied into and out from a VE stack area.
+
+##How to call the function written by Fortran
+
+###VE Code (Fortran)
+Code written by Fortran to run on VE is shown below.
+
+~~~c
+SUBROUTINE SUB1(x, ret)
+  implicit none
+  INTEGER, INTENT(IN) :: x
+  INTEGER, INTENT(OUT) :: ret
+  ret = x + 1
+END SUBROUTINE SUB1
+
+INTEGER FUNCTION FUNC1(x, y)
+  implicit none
+  INTEGER, VALUE :: x, y
+  FUNC1 = x + y
+END FUNCTION FUNC1
+~~~
+Save the above code as libvefortran.f90.
+
+###Compile VE Code (Fortran)
+
+To build an executable with the functions statically linked, execute as follows:
+~~~
+$ /opt/nec/ve/bin/nfort -c -o libvefortran.o libvefortran.f90
+$ /opt/nec/ve/bin/mk_veorun_static -o vefortran libvefortran.o
+~~~
+To build a shared library with the functions for dynamic loading, execute as follows:
+~~~
+$ /opt/nec/ve/bin/nfort -shared -fpic -o libvefortran.so libvefortran.f90
+~~~
+
+### VH Main Program (Fortran)
+Main routine on VH side to run VE program written by Fortran is shown here.
+
+The example VH program to call a VE Fortran function in a statically linked executable:
+~~~c
+#include <ve_offload.h>
+int main()
+{
+  /* Load "vefortran" on VE node 0 */
+  struct veo_proc_handle *proc = veo_proc_create_static(0, "./vefortran");
+  uint64_t handle = NULL;/* find a function in the executable */
+  struct veo_thr_ctxt *ctx = veo_context_open(proc);
+  struct veo_args *argp = veo_args_alloc();
+  long x = 42;
+  long y;
+  veo_args_set_stack(argp, VEO_INTENT_IN, 0, &x, sizeof(x));
+  veo_args_set_stack(argp, VEO_INTENT_OUT, 1, &y, sizeof(y));
+  uint64_t id = veo_call_async_by_name(ctx, handle, "sub1_", argp);
+  uint64_t retval;
+  veo_call_wait_result(ctx, id, &retval);
+  printf("SUB1 return %lu\n", retval);
+  veo_args_clear(argp);
+  veo_args_set_i64(argp, 0, 1);
+  veo_args_set_i64(argp, 1, 2);
+  id = veo_call_async_by_name(ctx, handle, "func1_", argp);
+  veo_call_wait_result(ctx, id, &retval);
+  printf("FUNC1 return %lu\n", retval);
+  veo_args_free(argp);
+  veo_context_close(ctx);
+  return 0;
+}
+~~~
+Save the above code as fortran.c.
+
+If you want to pass arguments to VE Fortran function, please use veo_args_set_stack() to pass arguments as stack arguments.
+However if you want to pass arguments to arguments with VALUE attribute in Fortran function, please pass arguments by value in the same way as VE C function.
+
+When you want to call VE Fortran function by veo_call_async_by_name() with the name of a Fortran function, 
+please change the name of the Fortran function to lowercase, and add "_" at the end of the function name.
+
+Taking libvefortran.f90 and fortran.c as an example, pass "sub1_" as a argument to veo_call_async_by_name() in fortran.c when calling the Fortran function named "SUB1" in libvefortran.f90.
+
+The method of compiling and running VH main program are same as C program.
+
+### Compile VH Main Program (Fortran)
+Compile source code on VH side as shown below.
+This is the same as the compilation method described above.
+
+~~~
+$ gcc -o fortran fortran.c -I/opt/nec/ve/veos/include -L/opt/nec/ve/veos/lib64 \
+   -Wl,-rpath=/opt/nec/ve/veos/lib64 -lveo
+~~~
+### Run a program with VEO
+Execute the compiled VEO program.
+This is also the same as the execution method described above.
+
+~~~
+$ ./fortran
+SUB1 return 43
+FUNC1 return 3
+~~~
 
 ##How to get log file
 Create a file named .log4crc in your home directory.

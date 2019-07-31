@@ -34,7 +34,7 @@ int test_32(int i32, unsigned int u32, float f32)
 	} u;
 	u.f = f32;
 	int i = u.i;
-	printf("VE: argument passed: %d, %u, %f (%#08x) \n", i32, u32, f32, i);
+	printf("ve: argument passed: %d, %u, %f (%#08x) \n", i32, u32, f32, i);
 	return 0;
 }
 
@@ -49,4 +49,16 @@ int test_many_inout(char *in0, int *inout1, float *out2, double d3, double d4,
 	*out2 = (float)s;
 	strncpy(out8, "Hello, 89abcdef", i9 - 1);
 	return 1;
+}
+
+int test_8(int i8, unsigned int u8)
+{
+    printf("VE: argument passed: %hhd, %hhu\n", i8, u8);
+    return i8;
+}
+
+int test_16(int i16, unsigned int u16)
+{
+    printf("VE: argument passed: %hd, %hu\n", i16, u16);
+    return 0;
 }

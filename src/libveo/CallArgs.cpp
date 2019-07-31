@@ -208,6 +208,10 @@ template void CallArgs::set_<int64_t>(int, int64_t);
 template void CallArgs::set_<uint64_t>(int, uint64_t);
 template void CallArgs::set_<int32_t>(int, int32_t);
 template void CallArgs::set_<uint32_t>(int, uint32_t);
+template void CallArgs::set_<int16_t>(int, int16_t);
+template void CallArgs::set_<uint16_t>(int, uint16_t);
+template void CallArgs::set_<int8_t>(int, int8_t);
+template void CallArgs::set_<uint8_t>(int, uint8_t);
 template void CallArgs::set_<double>(int, double);
 template void CallArgs::set_<float>(int, float);
 

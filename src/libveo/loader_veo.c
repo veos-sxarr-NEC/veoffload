@@ -910,12 +910,6 @@ char * open_bin_file (char *filename, int *pfd)
 		goto end;
 	}
 
-	if (st.f_flag & ST_NOSUID) {
-		PSEUDO_ERROR("Executing from a directory mounted with nosuid");
-		retval = -EACCES;
-		goto end;
-	}
-
 	/* Check if realpath has search permissions
 	 * If not, then EACCES should be returned */
 	retval = access(filename, F_OK);

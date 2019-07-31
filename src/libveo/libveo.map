@@ -17,6 +17,10 @@ VERSION_1 {
     veo_args_set_u64;
     veo_args_set_i32;
     veo_args_set_u32;
+    veo_args_set_i16;
+    veo_args_set_u16;
+    veo_args_set_i8;
+    veo_args_set_u8;
     veo_args_set_double;
     veo_args_set_float;
     veo_args_set_stack;

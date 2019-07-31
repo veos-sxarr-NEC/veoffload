@@ -79,6 +79,10 @@ int veo_args_set_i64(struct veo_args *, int, int64_t);
 int veo_args_set_u64(struct veo_args *, int, uint64_t);
 int veo_args_set_i32(struct veo_args *, int, int32_t);
 int veo_args_set_u32(struct veo_args *, int, uint32_t);
+int veo_args_set_i16(struct veo_args *, int, int16_t);
+int veo_args_set_u16(struct veo_args *, int, uint16_t);
+int veo_args_set_i8(struct veo_args *, int, int8_t);
+int veo_args_set_u8(struct veo_args *, int, uint8_t);
 int veo_args_set_double(struct veo_args *, int, double);
 int veo_args_set_float(struct veo_args *, int, float);
 int veo_args_set_stack(struct veo_args *, enum veo_args_intent,

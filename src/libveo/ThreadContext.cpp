@@ -94,7 +94,6 @@ void start_child_thread(veos_handle *os_handle, void *arg)
 
 ThreadContext::ThreadContext(ProcHandle *p, veos_handle *osh, bool is_main):
   proc(p), os_handle(osh), state(VEO_STATE_UNKNOWN),
-//  pseudo_thread(pthread_self()), is_main_thread(is_main) {}
   pseudo_thread(pthread_self()), is_main_thread(is_main), seq_no(0) {}
 
 /**
@@ -375,13 +374,14 @@ void ThreadContext::eventLoop()
   while (this->state == VEO_STATE_BLOCKED) {
     auto command = std::move(this->comq.popRequest());
     auto rv = (*command)();
-    this->comq.pushCompletion(std::move(command));
     if (rv != 0) {
-      VEO_ERROR(this, "Internal error on executing a command(%d)", rv);
       this->state = VEO_STATE_EXIT;
+      this->comq.pushCompletion(std::move(command));
       this->comq.setCompletion();
+      VEO_ERROR(this, "Internal error on executing a command(%d)", rv);
       return;
     }
+    this->comq.pushCompletion(std::move(command));
   }
 }
 
