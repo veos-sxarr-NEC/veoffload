@@ -25,7 +25,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">VE Offloading
-   &#160;<span id="projectnumber">2.1.0</span>
+   &#160;<span id="projectnumber">2.1.1</span>
    </div>
   </td>
  </tr>
@@ -137,6 +137,18 @@ Functions</h2></td></tr>
 <tr class="memitem:gaa48666a66b33b847da70a901cef417a5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#gaa48666a66b33b847da70a901cef417a5">veo_args_set_u32</a> (veo_args *ca, int argnum, uint32_t val)</td></tr>
 <tr class="memdesc:gaa48666a66b33b847da70a901cef417a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">set a 32-bit unsigned integer argument  <a href="#gaa48666a66b33b847da70a901cef417a5">More...</a><br/></td></tr>
 <tr class="separator:gaa48666a66b33b847da70a901cef417a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga2cb2938fb474160bbd01051f50818ff0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga2cb2938fb474160bbd01051f50818ff0">veo_args_set_i16</a> (veo_args *ca, int argnum, int16_t val)</td></tr>
+<tr class="memdesc:ga2cb2938fb474160bbd01051f50818ff0"><td class="mdescLeft">&#160;</td><td class="mdescRight">set a 16-bit integer argument  <a href="#ga2cb2938fb474160bbd01051f50818ff0">More...</a><br/></td></tr>
+<tr class="separator:ga2cb2938fb474160bbd01051f50818ff0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5e3068957b82cf57b5a34826ff0e883b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga5e3068957b82cf57b5a34826ff0e883b">veo_args_set_u16</a> (veo_args *ca, int argnum, uint16_t val)</td></tr>
+<tr class="memdesc:ga5e3068957b82cf57b5a34826ff0e883b"><td class="mdescLeft">&#160;</td><td class="mdescRight">set a 16-bit unsigned integer argument  <a href="#ga5e3068957b82cf57b5a34826ff0e883b">More...</a><br/></td></tr>
+<tr class="separator:ga5e3068957b82cf57b5a34826ff0e883b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga76016c56147ca2177466b5a3737db970"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga76016c56147ca2177466b5a3737db970">veo_args_set_i8</a> (veo_args *ca, int argnum, int8_t val)</td></tr>
+<tr class="memdesc:ga76016c56147ca2177466b5a3737db970"><td class="mdescLeft">&#160;</td><td class="mdescRight">set a 8-bit integer argument  <a href="#ga76016c56147ca2177466b5a3737db970">More...</a><br/></td></tr>
+<tr class="separator:ga76016c56147ca2177466b5a3737db970"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf9951b0d09691a21bd2c125640fbd396"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#gaf9951b0d09691a21bd2c125640fbd396">veo_args_set_u8</a> (veo_args *ca, int argnum, uint8_t val)</td></tr>
+<tr class="memdesc:gaf9951b0d09691a21bd2c125640fbd396"><td class="mdescLeft">&#160;</td><td class="mdescRight">set a 8-bit unsigned integer argument  <a href="#gaf9951b0d09691a21bd2c125640fbd396">More...</a><br/></td></tr>
+<tr class="separator:gaf9951b0d09691a21bd2c125640fbd396"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga26a7032d6a33f3b19ae37963cc4a1224"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga26a7032d6a33f3b19ae37963cc4a1224">veo_args_set_double</a> (veo_args *ca, int argnum, double val)</td></tr>
 <tr class="memdesc:ga26a7032d6a33f3b19ae37963cc4a1224"><td class="mdescLeft">&#160;</td><td class="mdescRight">set a double precision floating point number argument  <a href="#ga26a7032d6a33f3b19ae37963cc4a1224">More...</a><br/></td></tr>
 <tr class="separator:ga26a7032d6a33f3b19ae37963cc4a1224"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1214,6 +1226,178 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>set a 32-bit unsigned integer argument </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ca</td><td>veo_args </td></tr>
+    <tr><td class="paramname">argnum</td><td>the argnum-th argument </td></tr>
+    <tr><td class="paramname">val</td><td>value to be set </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>zero upon success; negative upon failure. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga2cb2938fb474160bbd01051f50818ff0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int veo_args_set_i16 </td>
+          <td>(</td>
+          <td class="paramtype">veo_args *&#160;</td>
+          <td class="paramname"><em>ca</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>argnum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int16_t&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>set a 16-bit integer argument </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ca</td><td>veo_args </td></tr>
+    <tr><td class="paramname">argnum</td><td>the argnum-th argument </td></tr>
+    <tr><td class="paramname">val</td><td>value to be set </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>zero upon success; negative upon failure. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga5e3068957b82cf57b5a34826ff0e883b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int veo_args_set_u16 </td>
+          <td>(</td>
+          <td class="paramtype">veo_args *&#160;</td>
+          <td class="paramname"><em>ca</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>argnum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>set a 16-bit unsigned integer argument </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ca</td><td>veo_args </td></tr>
+    <tr><td class="paramname">argnum</td><td>the argnum-th argument </td></tr>
+    <tr><td class="paramname">val</td><td>value to be set </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>zero upon success; negative upon failure. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga76016c56147ca2177466b5a3737db970"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int veo_args_set_i8 </td>
+          <td>(</td>
+          <td class="paramtype">veo_args *&#160;</td>
+          <td class="paramname"><em>ca</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>argnum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int8_t&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>set a 8-bit integer argument </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ca</td><td>veo_args </td></tr>
+    <tr><td class="paramname">argnum</td><td>the argnum-th argument </td></tr>
+    <tr><td class="paramname">val</td><td>value to be set </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>zero upon success; negative upon failure. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gaf9951b0d09691a21bd2c125640fbd396"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int veo_args_set_u8 </td>
+          <td>(</td>
+          <td class="paramtype">veo_args *&#160;</td>
+          <td class="paramname"><em>ca</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>argnum</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>val</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>set a 8-bit unsigned integer argument </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">ca</td><td>veo_args </td></tr>

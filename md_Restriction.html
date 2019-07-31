@@ -25,7 +25,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">VE Offloading
-   &#160;<span id="projectnumber">2.1.0</span>
+   &#160;<span id="projectnumber">2.1.1</span>
    </div>
   </td>
  </tr>
@@ -56,12 +56,14 @@ $(document).ready(function(){initNavTree('md_Restriction.html','');});
 <div class="contents">
 <div class="textblock"><p>VEO does not support:</p>
 <ul>
-<li>to call <a class="el" href="group__veoapi.html#ga6193ffeb9a3ac5c34ce666ea652e6daa" title="create a VE process ">veo_proc_create()</a> or <a class="el" href="group__veoapi.html#ga530f674447a56261f0a75891f3a60913" title="create a VE process with non-default veorun binary ">veo_proc_create_static()</a> in child thread;</li>
-<li>to use VE program written in Fortran.</li>
-<li>to use multiple VEs by a VH process.</li>
-<li>to re-create a VE process after the destruction of the VE process.</li>
+<li>to use quadruple precision real number a variable length character string as a return value and an argument of Fortran subroutines and functions,</li>
+<li>to use multiple VEs by a VH process,</li>
+<li>to re-create a VE process after the destruction of the VE process, and</li>
+<li>to call API of VE DMA or VH-VE SHM on the VE side if VEO API is called from child thread on the VH side.</li>
 </ul>
-<p>The current <a class="el" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close()</a> implementation remains threads on the VE side glibc when calling <a class="el" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close()</a>. </p>
+<p>The current <a class="el" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close()</a> implementation remains threads on the VE side glibc when calling <a class="el" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close()</a>.</p>
+<p>Ported commands such as /opt/nec/ve/bin/ps and /opt/nec/ve/bin/top do not show VE processes when they are created by a child thread on VH side using VEO API.</p>
+<p>Ported commands such as /opt/nec/ve/bin/free show memory used by these VE processes. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

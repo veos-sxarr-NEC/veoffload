@@ -25,7 +25,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">VE Offloading
-   &#160;<span id="projectnumber">2.1.0</span>
+   &#160;<span id="projectnumber">2.1.1</span>
    </div>
   </td>
  </tr>
@@ -60,14 +60,33 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <p>SX-Aurora TSUBASA provides VE Offloading framework (VEO) for the accelerator programming model and enables to develop a program using both VEs and VH computing resources.</p>
 <h2>Hello World</h2>
 <p>First, let's try a "Hello, World!" program on VE.</p>
-<h3>Install VEO Packages</h3>
-<p>To run programs using VEO, please install veoffload-veorun and veoffload packages. To develop programs using VEO, veoffload-devel package is also necessary.</p>
+<h3>Install required packages</h3>
+<p>To run programs using VEO, please install veoffload-veorun, veoffload and compilers packages.</p>
+<p>To develop programs using VEO, veoffload-devel package is also necessary.</p>
 <p>To install the packages to run VEO programs by yum, execute the following command as root:</p>
 <div class="fragment"><div class="line"><span class="preprocessor"># yum install veoffload</span></div>
 </div><!-- fragment --><p>veoffload-veorun is automatically installed by dependency.</p>
 <p>To install the packages to develop VEO programs by yum, execute the following command as root:</p>
 <div class="fragment"><div class="line"><span class="preprocessor"># yum install veoffload-veorun-devel veoffload-devel</span></div>
-</div><!-- fragment --><h3>VE Code</h3>
+</div><!-- fragment --><p>The following package are required to run VEO programs except for VEO packages.</p>
+<ul>
+<li>nec-nc++-shared-2.3.0-2.3.0-1 or later</li>
+<li>nec-nc++-shared-inst-2-2.3.0-1.noarch or later</li>
+<li>nec-nfort-shared-2.3.0-2.3.0-1.x86_64 or later</li>
+<li>nec-nfort-shared-inst-2-2.3.0-1.noarch or later</li>
+<li>nec-nfort-runtime-2.0.0-1.x86_64 or later</li>
+</ul>
+<p>The following packages are required to create a shared object for Fortran or C/C++ programs except for VEO packages.</p>
+<ul>
+<li>nec-nc++-2.3.0-2.3.0-1.x86_64 or later</li>
+<li>nec-nc++-inst-2.3.0-1.noarch or later</li>
+<li>nec-nc++-shared-devel-2.3.0-2.3.0-1.x86_64 or later</li>
+<li>nec-nfort-2.3.0-2.3.0-1.x86_64 or later</li>
+<li>nec-nfort-inst-2.3.0-1.noarch or later</li>
+<li>nec-nfort-shared-devel-2.3.0-2.3.0-1.x86_64 or later</li>
+<li>binutils-ve-2.26-2.2.x86_64.rpm or later</li>
+</ul>
+<h3>VE Code</h3>
 <p>Code to run on VE is shown below. Standard C functions are available, hence, you can use printf(3).</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
@@ -107,7 +126,8 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <div class="line">  <a class="code" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close</a>(ctx);</div>
 <div class="line">  <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><p> To call a VE function in a statically linked executable:</p>
+</div><!-- fragment --><p> Save the above code as hello.c.</p>
+<p>To call a VE function in a statically linked executable:</p>
 <ol type="1">
 <li>Create a process on a VE node by <a class="el" href="group__veoapi.html#ga530f674447a56261f0a75891f3a60913" title="create a VE process with non-default veorun binary ">veo_proc_create_static()</a>. Specify VE node number and an executable to run on the VE. A VEO process handle is returned.</li>
 <li>Create a VEO context, a thread in a VE process specified by a VEO process handle to execute a VE function, by <a class="el" href="group__veoapi.html#ga8752c03fee0f7f200227a43cfd50f84c" title="open a VEO context ">veo_context_open()</a>.</li>
@@ -160,6 +180,10 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <div class="line"><span class="keywordtype">int</span> <a class="code" href="group__veoapi.html#gabd8457477778e17444ba334f92f25398" title="set a 64-bit uunsigned integer argument ">veo_args_set_u64</a>(<span class="keyword">struct</span> veo_args *args, <span class="keywordtype">int</span> argnum, uint64_t val);</div>
 <div class="line"><span class="keywordtype">int</span> <a class="code" href="group__veoapi.html#ga5e649ac59dc81053fd90173ddfca4d85" title="set a 32-bit integer argument ">veo_args_set_i32</a>(<span class="keyword">struct</span> veo_args *args, <span class="keywordtype">int</span> argnum, int32_t val);</div>
 <div class="line"><span class="keywordtype">int</span> <a class="code" href="group__veoapi.html#gaa48666a66b33b847da70a901cef417a5" title="set a 32-bit unsigned integer argument ">veo_args_set_u32</a>(<span class="keyword">struct</span> veo_args *args, <span class="keywordtype">int</span> argnum, uint32_t val);</div>
+<div class="line"><span class="keywordtype">int</span> <a class="code" href="group__veoapi.html#ga2cb2938fb474160bbd01051f50818ff0" title="set a 16-bit integer argument ">veo_args_set_i16</a>(<span class="keyword">struct</span> veo_args *args, <span class="keywordtype">int</span> argnum, int16_t val);</div>
+<div class="line"><span class="keywordtype">int</span> <a class="code" href="group__veoapi.html#ga5e3068957b82cf57b5a34826ff0e883b" title="set a 16-bit unsigned integer argument ">veo_args_set_u16</a>(<span class="keyword">struct</span> veo_args *args, <span class="keywordtype">int</span> argnum, uint16_t val);</div>
+<div class="line"><span class="keywordtype">int</span> <a class="code" href="group__veoapi.html#ga76016c56147ca2177466b5a3737db970" title="set a 8-bit integer argument ">veo_args_set_i8</a>(<span class="keyword">struct</span> veo_args *args, <span class="keywordtype">int</span> argnum, int8_t val);</div>
+<div class="line"><span class="keywordtype">int</span> <a class="code" href="group__veoapi.html#gaf9951b0d09691a21bd2c125640fbd396" title="set a 8-bit unsigned integer argument ">veo_args_set_u8</a>(<span class="keyword">struct</span> veo_args *args, <span class="keywordtype">int</span> argnum, uint8_t val);</div>
 </div><!-- fragment --><p>You can pass also a floating point number argument.</p>
 <div class="fragment"><div class="line"><span class="keywordtype">int</span> <a class="code" href="group__veoapi.html#ga26a7032d6a33f3b19ae37963cc4a1224" title="set a double precision floating point number argument ">veo_args_set_double</a>(<span class="keyword">struct</span> veo_args *args, <span class="keywordtype">int</span> argnum, <span class="keywordtype">double</span> val);</div>
 <div class="line"><span class="keywordtype">int</span> <a class="code" href="group__veoapi.html#ga21898741050e60fdc40f73c4d0807fbe" title="set a single precision floating point number argument ">veo_args_set_float</a>(<span class="keyword">struct</span> veo_args *args, <span class="keywordtype">int</span> argnum, <span class="keywordtype">float</span> val);</div>
@@ -180,7 +204,72 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <li>VEO_INTENT_OUT: the argument is for output; a VE stack area is allocated without copy-in and data is copied out to VH memory on completion.</li>
 <li>VEO_INTENT_INOUT: the argument is for both input and output; data is copied into and out from a VE stack area.</li>
 </ul>
-<h2>How to get log file</h2>
+<h2>How to call the function written by Fortran</h2>
+<h3>VE Code (Fortran)</h3>
+<p>Code written by Fortran to run on VE is shown below.</p>
+<div class="fragment"><div class="line">SUBROUTINE SUB1(x, ret)</div>
+<div class="line">  implicit none</div>
+<div class="line">  INTEGER, INTENT(IN) :: x</div>
+<div class="line">  INTEGER, INTENT(OUT) :: ret</div>
+<div class="line">  ret = x + 1</div>
+<div class="line">END SUBROUTINE SUB1</div>
+<div class="line"></div>
+<div class="line">INTEGER FUNCTION FUNC1(x, y)</div>
+<div class="line">  implicit none</div>
+<div class="line">  INTEGER, VALUE :: x, y</div>
+<div class="line">  FUNC1 = x + y</div>
+<div class="line">END FUNCTION FUNC1</div>
+</div><!-- fragment --><p> Save the above code as libvefortran.f90.</p>
+<h3>Compile VE Code (Fortran)</h3>
+<p>To build an executable with the functions statically linked, execute as follows: </p>
+<div class="fragment"><div class="line">$ /opt/nec/ve/bin/nfort -c -o libvefortran.o libvefortran.f90</div>
+<div class="line">$ /opt/nec/ve/bin/mk_veorun_static -o vefortran libvefortran.o</div>
+</div><!-- fragment --><p> To build a shared library with the functions for dynamic loading, execute as follows: </p>
+<div class="fragment"><div class="line">$ /opt/nec/ve/bin/nfort -shared -fpic -o libvefortran.so libvefortran.f90</div>
+</div><!-- fragment --><h3>VH Main Program (Fortran)</h3>
+<p>Main routine on VH side to run VE program written by Fortran is shown here.</p>
+<p>The example VH program to call a VE Fortran function in a statically linked executable: </p>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;ve_offload.h&gt;</span></div>
+<div class="line"><span class="keywordtype">int</span> main()</div>
+<div class="line">{</div>
+<div class="line">  <span class="comment">/* Load &quot;vefortran&quot; on VE node 0 */</span></div>
+<div class="line">  <span class="keyword">struct </span>veo_proc_handle *proc = <a class="code" href="group__veoapi.html#ga530f674447a56261f0a75891f3a60913" title="create a VE process with non-default veorun binary ">veo_proc_create_static</a>(0, <span class="stringliteral">&quot;./vefortran&quot;</span>);</div>
+<div class="line">  uint64_t handle = NULL;<span class="comment">/* find a function in the executable */</span></div>
+<div class="line">  <span class="keyword">struct </span>veo_thr_ctxt *ctx = <a class="code" href="group__veoapi.html#ga8752c03fee0f7f200227a43cfd50f84c" title="open a VEO context ">veo_context_open</a>(proc);</div>
+<div class="line">  <span class="keyword">struct </span>veo_args *argp = <a class="code" href="group__veoapi.html#gad0bf43103b44d25d9c4f096f3d55b798" title="allocate VEO arguments object (veo_args) ">veo_args_alloc</a>();</div>
+<div class="line">  <span class="keywordtype">long</span> x = 42;</div>
+<div class="line">  <span class="keywordtype">long</span> y;</div>
+<div class="line">  <a class="code" href="group__veoapi.html#gaba4a2043f7ceb60989909c74a4e8670d" title="set VEO function calling argument pointing to buffer on stack ">veo_args_set_stack</a>(argp, VEO_INTENT_IN, 0, &amp;x, <span class="keyword">sizeof</span>(x));</div>
+<div class="line">  <a class="code" href="group__veoapi.html#gaba4a2043f7ceb60989909c74a4e8670d" title="set VEO function calling argument pointing to buffer on stack ">veo_args_set_stack</a>(argp, VEO_INTENT_OUT, 1, &amp;y, <span class="keyword">sizeof</span>(y));</div>
+<div class="line">  uint64_t <span class="keywordtype">id</span> = <a class="code" href="group__veoapi.html#ga1999d72380998381df067cfcd9213030" title="request a VE thread to call a function ">veo_call_async_by_name</a>(ctx, handle, <span class="stringliteral">&quot;sub1_&quot;</span>, argp);</div>
+<div class="line">  uint64_t retval;</div>
+<div class="line">  <a class="code" href="group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb" title="pick up a resutl from VE function ">veo_call_wait_result</a>(ctx, <span class="keywordtype">id</span>, &amp;retval);</div>
+<div class="line">  printf(<span class="stringliteral">&quot;SUB1 return %lu\n&quot;</span>, retval);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#ga7ebe2a9759aea17a85bcf70deb3dce99" title="clear arguments set in VEO arguments object ">veo_args_clear</a>(argp);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#ga8a020c60faad78c74394fd0466baf393" title="set a 64-bit integer argument ">veo_args_set_i64</a>(argp, 0, 1);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#ga8a020c60faad78c74394fd0466baf393" title="set a 64-bit integer argument ">veo_args_set_i64</a>(argp, 1, 2);</div>
+<div class="line">  <span class="keywordtype">id</span> = <a class="code" href="group__veoapi.html#ga1999d72380998381df067cfcd9213030" title="request a VE thread to call a function ">veo_call_async_by_name</a>(ctx, handle, <span class="stringliteral">&quot;func1_&quot;</span>, argp);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb" title="pick up a resutl from VE function ">veo_call_wait_result</a>(ctx, <span class="keywordtype">id</span>, &amp;retval);</div>
+<div class="line">  printf(<span class="stringliteral">&quot;FUNC1 return %lu\n&quot;</span>, retval);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#ga3896858cc2ef3417c00843a3cd84b760" title="free VEO arguments object ">veo_args_free</a>(argp);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close</a>(ctx);</div>
+<div class="line">  <span class="keywordflow">return</span> 0;</div>
+<div class="line">}</div>
+</div><!-- fragment --><p> Save the above code as fortran.c.</p>
+<p>If you want to pass arguments to VE Fortran function, please use <a class="el" href="group__veoapi.html#gaba4a2043f7ceb60989909c74a4e8670d" title="set VEO function calling argument pointing to buffer on stack ">veo_args_set_stack()</a> to pass arguments as stack arguments. However if you want to pass arguments to arguments with VALUE attribute in Fortran function, please pass arguments by value in the same way as VE C function.</p>
+<p>When you want to call VE Fortran function by <a class="el" href="group__veoapi.html#ga1999d72380998381df067cfcd9213030" title="request a VE thread to call a function ">veo_call_async_by_name()</a> with the name of a Fortran function, please change the name of the Fortran function to lowercase, and add "_" at the end of the function name.</p>
+<p>Taking libvefortran.f90 and fortran.c as an example, pass "sub1_" as a argument to <a class="el" href="group__veoapi.html#ga1999d72380998381df067cfcd9213030" title="request a VE thread to call a function ">veo_call_async_by_name()</a> in fortran.c when calling the Fortran function named "SUB1" in libvefortran.f90.</p>
+<p>The method of compiling and running VH main program are same as C program.</p>
+<h3>Compile VH Main Program (Fortran)</h3>
+<p>Compile source code on VH side as shown below. This is the same as the compilation method described above.</p>
+<div class="fragment"><div class="line">$ gcc -o fortran fortran.c -I/opt/nec/ve/veos/include -L/opt/nec/ve/veos/lib64 \</div>
+<div class="line">   -Wl,-rpath=/opt/nec/ve/veos/lib64 -lveo</div>
+</div><!-- fragment --> <h3>Run a program with VEO</h3>
+<p>Execute the compiled VEO program. This is also the same as the execution method described above.</p>
+<div class="fragment"><div class="line">$ ./fortran</div>
+<div class="line">SUB1 <span class="keywordflow">return</span> 43</div>
+<div class="line">FUNC1 <span class="keywordflow">return</span> 3</div>
+</div><!-- fragment --><h2>How to get log file</h2>
 <p>Create a file named .log4crc in your home directory. Copy the following lines to .log4crc. </p>
 <div class="fragment"><div class="line">&lt;?xml version=<span class="stringliteral">&quot;1.0&quot;</span> encoding=<span class="stringliteral">&quot;ISO-8859-1&quot;</span>?&gt;</div>
 <div class="line">&lt;!DOCTYPE log4c SYSTEM <span class="stringliteral">&quot;&quot;</span>&gt;</div>
