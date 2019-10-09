@@ -25,7 +25,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">VE Offloading
-   &#160;<span id="projectnumber">2.1.1</span>
+   &#160;<span id="projectnumber">2.2.0</span>
    </div>
   </td>
  </tr>
@@ -62,6 +62,7 @@ $(document).ready(function(){initNavTree('md_Restriction.html','');});
 <li>to call API of VE DMA or VH-VE SHM on the VE side if VEO API is called from child thread on the VH side.</li>
 </ul>
 <p>The current <a class="el" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close()</a> implementation remains threads on the VE side glibc when calling <a class="el" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close()</a>.</p>
+<p>By default, an OpenMP program statically linked can cause load imbalance of threads. If you set environmental veriable of OMP_NUM_THREADS to number of ve cores minus one, loaded threads are balanced in case of using statically linked program. By default, an OpenMP program for dynamic loading can load threads in balance.</p>
 <p>Ported commands such as /opt/nec/ve/bin/ps and /opt/nec/ve/bin/top do not show VE processes when they are created by a child thread on VH side using VEO API.</p>
 <p>Ported commands such as /opt/nec/ve/bin/free show memory used by these VE processes. </p>
 </div></div><!-- contents -->

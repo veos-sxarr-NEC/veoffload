@@ -25,7 +25,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">VE Offloading
-   &#160;<span id="projectnumber">2.1.1</span>
+   &#160;<span id="projectnumber">2.2.0</span>
    </div>
   </td>
  </tr>
@@ -61,22 +61,23 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <h2>Hello World</h2>
 <p>First, let's try a "Hello, World!" program on VE.</p>
 <h3>Install required packages</h3>
-<p>To run programs using VEO, please install veoffload-veorun, veoffload and compilers packages.</p>
-<p>To develop programs using VEO, veoffload-devel package is also necessary.</p>
+<p>To run programs using VEO, please install veoffload-veorun, veoffload and runtime packages of the compiler.</p>
+<p>To develop programs using VEO, veoffload-veorun-devel, veoffload-devel and development packages of compiler are also required.</p>
 <p>To install the packages to run VEO programs by yum, execute the following command as root:</p>
 <div class="fragment"><div class="line"><span class="preprocessor"># yum install veoffload</span></div>
 </div><!-- fragment --><p>veoffload-veorun is automatically installed by dependency.</p>
 <p>To install the packages to develop VEO programs by yum, execute the following command as root:</p>
 <div class="fragment"><div class="line"><span class="preprocessor"># yum install veoffload-veorun-devel veoffload-devel</span></div>
-</div><!-- fragment --><p>The following package are required to run VEO programs except for VEO packages.</p>
+</div><!-- fragment --><p>The following runtime package of the compiler are required to run VEO programs.</p>
 <ul>
 <li>nec-nc++-shared-2.3.0-2.3.0-1 or later</li>
 <li>nec-nc++-shared-inst-2-2.3.0-1.noarch or later</li>
 <li>nec-nfort-shared-2.3.0-2.3.0-1.x86_64 or later</li>
 <li>nec-nfort-shared-inst-2-2.3.0-1.noarch or later</li>
 <li>nec-nfort-runtime-2.0.0-1.x86_64 or later</li>
+<li>binutils-ve-2.26-2.2.x86_64.rpm or later</li>
 </ul>
-<p>The following packages are required to create a shared object for Fortran or C/C++ programs except for VEO packages.</p>
+<p>The following development packages of the compiler are also required to create a shared object for Fortran or C/C++ programs.</p>
 <ul>
 <li>nec-nc++-2.3.0-2.3.0-1.x86_64 or later</li>
 <li>nec-nc++-inst-2.3.0-1.noarch or later</li>
@@ -84,7 +85,6 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <li>nec-nfort-2.3.0-2.3.0-1.x86_64 or later</li>
 <li>nec-nfort-inst-2.3.0-1.noarch or later</li>
 <li>nec-nfort-shared-devel-2.3.0-2.3.0-1.x86_64 or later</li>
-<li>binutils-ve-2.26-2.2.x86_64.rpm or later</li>
 </ul>
 <h3>VE Code</h3>
 <p>Code to run on VE is shown below. Standard C functions are available, hence, you can use printf(3).</p>

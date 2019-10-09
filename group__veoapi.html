@@ -25,7 +25,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">VE Offloading
-   &#160;<span id="projectnumber">2.1.1</span>
+   &#160;<span id="projectnumber">2.2.0</span>
    </div>
   </td>
  </tr>
@@ -268,6 +268,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>create a VE process with non-default veorun binary </p>
+<p>A VE process is created on the VE node specified by venode. If venode is -1, a VE process is created on the VE node specified by environment variable VE_NODE_NUMBER. If venode is -1 and environment variable VE_NODE_NUMBER is not set, a VE process is created on the VE node #0</p>
+<p>A user executes the program which invokes this function through the job scheduler, the value specified by venode will be treated as a logical VE node number. It will be translated into physical VE node number assigned by the job scheduler. If venode is -1, the first VE node of the VE nodes assigned by the job scheduler is used.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">venode</td><td>VE node number </td></tr>
@@ -300,6 +302,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>create a VE process </p>
+<p>A VE process is created on the VE node specified by venode. If venode is -1, a VE process is created on the VE node specified by environment variable VE_NODE_NUMBER. If venode is -1 and environment variable VE_NODE_NUMBER is not set, a VE process is created on the VE node #0</p>
+<p>A user executes the program which invokes this function through the job scheduler, the value specified by venode will be treated as a logical VE node number. It will be translated into physical VE node number assigned by the job scheduler. If venode is -1, the first VE node of the VE nodes assigned by the job scheduler is used.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">venode</td><td>VE node number </td></tr>
