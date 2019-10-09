@@ -41,6 +41,11 @@
 #include <config.h>
 #include <cstdio>
 #include <cstdlib>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <stdexcept>
+#include <cstring>
 #include "CallArgs.hpp"
 #include "ProcHandle.hpp"
 #include "VEOException.hpp"
@@ -124,6 +129,18 @@ veo_proc_handle *veo_proc__create(const char *ossock, const char *vedev,
 /**
  * @brief create a VE process with non-default veorun binary
  *
+ * A VE process is created on the VE node specified by venode. If
+ * venode is -1, a VE process is created on the VE node specified by
+ * environment variable VE_NODE_NUMBER. If venode is -1 and
+ * environment variable VE_NODE_NUMBER is not set, a VE process is
+ * created on the VE node #0
+ *
+ * A user executes the program which invokes this function through the
+ * job scheduler, the value specified by venode will be treated as a
+ * logical VE node number. It will be translated into physical VE node
+ * number assigned by the job scheduler. If venode is -1, the first VE
+ * node of the VE nodes assigned by the job scheduler is used.
+ *
  * @param venode VE node number
  * @param veobin VE alternative veorun binary path
  * @return pointer to VEO process handle upon success
@@ -131,15 +148,95 @@ veo_proc_handle *veo_proc__create(const char *ossock, const char *vedev,
  */
 veo_proc_handle *veo_proc_create_static(int venode, const char *veobin)
 {
-  char vedev[16];// the size of "/dev/veslot" = 12.
-  snprintf(vedev, sizeof(vedev), VE_DEV, venode);
-  char ossock[sizeof(VEOS_SOCKET) + 16];
-  snprintf(ossock, sizeof(ossock), VEOS_SOCKET, venode);
-  return veo_proc__create(ossock, vedev, veobin);
+  if (venode < -1) {
+    VEO_ERROR(nullptr, "venode(%d) is an invalid value.", venode);
+    return NULL;
+  }
+  try {
+    const char *venodelist = getenv("_VENODELIST");
+    if (venodelist != nullptr) {
+      // _VENODELIST is set
+      std::string str = std::string(venodelist);
+      std::vector<std::string> v;
+      std::stringstream ss(str);
+      std::string buffer;
+      char sep = ' ';
+      while(std::getline(ss, buffer, sep)) {
+        v.push_back(buffer);
+      }
+      if (venode == -1) {
+        const char *venodenum = getenv("VE_NODE_NUMBER");
+        if (venodenum != nullptr) {
+          // If VE_NODE_NUMBER is set, check is's value is in _VENODELIST
+          venode = stoi(std::string(venodenum));
+          int found = 0;
+          for (unsigned int i; i < v.size(); i++) {
+            if (stoi(v[i]) == venode) {
+              found = 1;
+              break;
+            }
+          }
+          if (found == 0) {
+            VEO_ERROR(nullptr, "VE node #%d is not assigned by the scheduler",
+                      venode);
+            return NULL;
+          }
+        } else {
+          // If VE_NODE_NUMBER is not set, use the first value in _VENODELIST
+          if (v.size() > 0) 
+            venode = stoi(v[0]);
+          else { 
+            VEO_ERROR(nullptr, "_VENODELIST is empty.", NULL);
+            return NULL;
+          }
+        }
+      } else {
+	// translate venode using _VENODELIST
+        if ((int)v.size() <= venode) {
+          VEO_ERROR(nullptr, "venode = %d exceeds the size of _VENDOELIST %d", venode, v.size());
+          return NULL;
+        }
+        venode = stoi(v[venode]);
+      }
+    } else {
+      // _VENODELIST is not set
+      if (venode == -1) {
+        const char *venodenum = getenv("VE_NODE_NUMBER");
+        if (venodenum != nullptr) {
+          venode = stoi(std::string(venodenum));
+        } else {
+          venode = 0;
+        }
+      }
+    }
+    char vedev[16];// the size of "/dev/veslot" = 12.
+    snprintf(vedev, sizeof(vedev), VE_DEV, venode);
+    char ossock[sizeof(VEOS_SOCKET) + 16];
+    snprintf(ossock, sizeof(ossock), VEOS_SOCKET, venode);
+    return veo_proc__create(ossock, vedev, veobin);
+  } catch (std::invalid_argument &e) {
+    VEO_ERROR(nullptr, "failed to create proc: %s", e.what());
+    return 0;
+  } catch (std::out_of_range &e) {
+    VEO_ERROR(nullptr, "failed to create proc: %s", e.what());
+    return 0;
+  }
 }
  
 /**
  * @brief create a VE process
+ *
+ * A VE process is created on the VE node specified by venode. If
+ * venode is -1, a VE process is created on the VE node specified by
+ * environment variable VE_NODE_NUMBER. If venode is -1 and
+ * environment variable VE_NODE_NUMBER is not set, a VE process is
+ * created on the VE node #0
+ *
+ * A user executes the program which invokes this function through the
+ * job scheduler, the value specified by venode will be treated as a
+ * logical VE node number. It will be translated into physical VE node
+ * number assigned by the job scheduler. If venode is -1, the first VE
+ * node of the VE nodes assigned by the job scheduler is used.
  *
  * @param venode VE node number
  * @return pointer to VEO process handle upon success

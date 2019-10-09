@@ -11,11 +11,13 @@
 #include <memory>
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 #include "ve_offload.h"
 namespace veo {
 class ThreadContext;
 
 typedef enum veo_command_state CommandStatus;
+typedef enum veo_queue_state QueueStatus;
 
 /**
  * @brief base class of command handled by pseudo thread
@@ -49,12 +51,17 @@ private:
   std::condition_variable cond;
   std::deque<std::unique_ptr<Command> > queue;
   std::unique_ptr<Command> tryFindNoLock(uint64_t);
+  std::atomic<QueueStatus> queue_state;
+
 public:
+  BlockingQueue() : queue_state(VEO_QUEUE_READY) {}
   void push(std::unique_ptr<Command>);
   std::unique_ptr<Command> pop();
   std::unique_ptr<Command> tryFind(uint64_t);
   std::unique_ptr<Command> wait(uint64_t);
   std::unique_ptr<Command> popNoWait();
+  void setStatus(QueueStatus s) { this->queue_state.store(s); }
+  QueueStatus getStatus() { return this->queue_state.load(); }
 };
 
 /**
@@ -67,12 +74,13 @@ private:
 public:
   CommQueue() {};
 
-  void pushRequest(std::unique_ptr<Command>);
+  int pushRequest(std::unique_ptr<Command>);
   std::unique_ptr<Command> popRequest();
   void pushCompletion(std::unique_ptr<Command>);
   std::unique_ptr<Command> waitCompletion(uint64_t msgid);
   std::unique_ptr<Command> peekCompletion(uint64_t msgid);
   void setCompletion();
+  void setRequestStatus(QueueStatus s){ this->request.setStatus(s); }
 };
 } // namespace veo
 #endif

@@ -10,6 +10,7 @@
 
 #include <string.h>
 #include <unistd.h>
+#include <sys/auxv.h>
 #include <sys/ipc.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
@@ -35,8 +36,6 @@ extern "C" {
 extern __thread veos_handle *g_handle;
 extern struct tid_info global_tid_info[VEOS_MAX_VE_THREADS];
 extern __thread sigset_t ve_proc_sigmask;
-
-int init_stack_veo(veos_handle*, int, char**, char**, struct ve_start_ve_req_cmd *);
 
 
 // copied from pseudo_process.c
@@ -340,9 +339,58 @@ int spawn_helper(ThreadContext *ctx, veos_handle *oshandle, const char *binname)
     return retval;
   }
 
-  // initialize the stack
   char *ve_argv[] = { helper_name, nullptr};
-  retval = init_stack_veo(oshandle, 1, ve_argv, environ, &start_ve_req);
+
+  // Allocate area for environment variables, NULL, auxiliary vectors and NULL
+  int env_num = 0;
+  for (char **envp = environ; NULL != *envp; envp++) {
+    env_num++;
+  }
+  env_num += 1 + 2 * (32 - 1) + 1;
+  char *env_array[env_num];
+
+  // Copy environment variables and auxiliary vectors
+  int env_index = 0;
+  for (char **envp = environ; NULL != *envp; envp++) {
+    env_array[env_index++] = *envp;
+  }
+  env_array[env_index++] = NULL;
+  unsigned long auxv_type, auxv_val;
+  for (auxv_type = 1; auxv_type < 32; auxv_type++) {
+    switch (auxv_type) {
+    // List of auxv that will be placed in VE process stack
+    case AT_EXECFD:
+    case AT_PHDR:
+    case AT_PHENT:
+    case AT_PHNUM:
+    case AT_PAGESZ:
+    case AT_BASE:
+    case AT_FLAGS:
+    case AT_ENTRY:
+    case AT_UID:
+    case AT_EUID:
+    case AT_GID:
+    case AT_EGID:
+    case AT_PLATFORM:
+    case AT_CLKTCK:
+    case AT_SECURE:
+    case AT_RANDOM:
+    case AT_EXECFN:
+    case AT_QUICKCALL_VADDR:
+      auxv_val = getauxval(auxv_type);
+      if (auxv_val) {
+        env_array[env_index++] = (char *)auxv_type;
+        env_array[env_index++] = (char *)auxv_val;
+      }
+      break;
+    default:
+      break;
+    }
+  }
+  env_array[env_index++] = NULL;
+
+  // initialize the stack
+  retval = init_stack(oshandle, 1, ve_argv, env_array, &start_ve_req);
   if (retval) {
     VEO_ERROR(ctx, "failed to make stack region (%d)", retval);
     process_thread_cleanup(oshandle, -1);

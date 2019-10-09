@@ -376,6 +376,7 @@ void ThreadContext::eventLoop()
     auto rv = (*command)();
     if (rv != 0) {
       this->state = VEO_STATE_EXIT;
+      this->comq.setRequestStatus(VEO_QUEUE_CLOSED);
       this->comq.pushCompletion(std::move(command));
       this->comq.setCompletion();
       VEO_ERROR(this, "Internal error on executing a command(%d)", rv);
@@ -422,7 +423,8 @@ int ThreadContext::close()
   auto id = this->issueRequestID();
   auto f = std::bind(&ThreadContext::_closeCommandHandler, this, id);
   std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
-  this->comq.pushRequest(std::move(req));
+  if(this->comq.pushRequest(std::move(req)))
+    id = VEO_REQUEST_ID_INVALID;
   auto c = this->comq.waitCompletion(id);
   return c->getRetval();
 }
@@ -438,7 +440,7 @@ uint64_t ThreadContext::callAsync(uint64_t addr, CallArgs &args)
 {
   if ( addr == 0 || this->state == VEO_STATE_EXIT)
     return VEO_REQUEST_ID_INVALID;
-
+  
   auto id = this->issueRequestID();
   auto f = [&args, this, addr, id] (Command *cmd) {
     VEO_TRACE(this, "[request #%d] start...", id);
@@ -470,7 +472,8 @@ uint64_t ThreadContext::callAsync(uint64_t addr, CallArgs &args)
   };
 
   std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
-  this->comq.pushRequest(std::move(req));
+  if(this->comq.pushRequest(std::move(req)))
+    return VEO_REQUEST_ID_INVALID;
   return id;
 }
 
@@ -534,7 +537,8 @@ uint64_t ThreadContext::_callOpenContext(ProcHandle *proc,
   };
 
   std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
-  this->comq.pushRequest(std::move(req));
+  if(this->comq.pushRequest(std::move(req)))
+    return VEO_REQUEST_ID_INVALID;
   return id;
 }
 

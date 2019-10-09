@@ -4,7 +4,7 @@ common_headers = $(top_srcdir)/include/ve_offload.h \
 dist_noinst_DATA = libveo.map
 
 libveo_la_SOURCES = $(common_headers) \
-                    log.hpp log.cpp loader_veo.c vars.c \
+                    log.hpp log.cpp vars.c \
                     api.cpp VEOException.hpp \
                     CallArgs.hpp CallArgs.cpp \
                     Command.hpp Command.cpp \

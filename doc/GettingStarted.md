@@ -19,10 +19,12 @@ using both VEs and VH computing resources.
 ## Hello World
 First, let's try a "Hello, World!" program on VE.
 
-### Install VEO Packages
-To run programs using VEO, please install veoffload-veorun and veoffload
-packages.
-To develop programs using VEO, veoffload-devel package is also necessary.
+### Install required packages
+To run programs using VEO, please install veoffload-veorun, veoffload
+and runtime packages of the compiler.
+
+To develop programs using VEO, veoffload-veorun-devel, veoffload-devel
+and development packages of compiler are also required.
 
 To install the packages to run VEO programs by yum, execute
 the following command as root:
@@ -39,6 +41,22 @@ the following command as root:
 ~~~
 # yum install veoffload-veorun-devel veoffload-devel
 ~~~
+
+The following runtime package of the compiler are required to run VEO programs.
+ * nec-nc++-shared-2.3.0-2.3.0-1 or later
+ * nec-nc++-shared-inst-2-2.3.0-1.noarch or later
+ * nec-nfort-shared-2.3.0-2.3.0-1.x86_64 or later
+ * nec-nfort-shared-inst-2-2.3.0-1.noarch or later
+ * nec-nfort-runtime-2.0.0-1.x86_64 or later
+ * binutils-ve-2.26-2.2.x86_64.rpm or later
+
+The following development packages of the compiler are also required to create a shared object for Fortran or C/C++ programs.
+ * nec-nc++-2.3.0-2.3.0-1.x86_64 or later
+ * nec-nc++-inst-2.3.0-1.noarch or later
+ * nec-nc++-shared-devel-2.3.0-2.3.0-1.x86_64 or later
+ * nec-nfort-2.3.0-2.3.0-1.x86_64 or later
+ * nec-nfort-inst-2.3.0-1.noarch or later
+ * nec-nfort-shared-devel-2.3.0-2.3.0-1.x86_64 or later
 
 ### VE Code
 Code to run on VE is shown below. Standard C functions are available,

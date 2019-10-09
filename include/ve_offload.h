@@ -24,7 +24,7 @@
 #ifndef _VE_OFFLOAD_H_
 #define _VE_OFFLOAD_H_
 
-#define VEO_API_VERSION 4
+#define VEO_API_VERSION 6
 #define VEO_SYMNAME_LEN_MAX (255)
 #define VEO_LOG_CATEGORY "veos.veo.veo"
 #define VEO_MAX_NUM_ARGS (32)
@@ -56,6 +56,11 @@ enum veo_args_intent {
   VEO_INTENT_IN = 0,
   VEO_INTENT_INOUT,
   VEO_INTENT_OUT,
+};
+
+enum veo_queue_state {
+  VEO_QUEUE_READY = 0,
+  VEO_QUEUE_CLOSED,
 };
 
 struct veo_args;

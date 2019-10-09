@@ -81,9 +81,18 @@ CmdPtr BlockingQueue::popNoWait() {
     return nullptr;
 }
 
-void CommQueue::pushRequest(std::unique_ptr<Command> req)
+/**
+ * @brief push a command to request queue
+ * @param req a pointer to a command to be pushed (sent)
+ * @return zero upon pushing a request; one upon not pushing a request
+ */
+int CommQueue::pushRequest(std::unique_ptr<Command> req)
 {
-  this->request.push(std::move(req));
+  if( this->request.getStatus() == VEO_QUEUE_READY ){
+    this->request.push(std::move(req));
+    return 0;
+  }
+  return 1;
 }
 
 std::unique_ptr<Command> CommQueue::popRequest()

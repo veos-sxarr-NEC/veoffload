@@ -27,7 +27,8 @@ uint64_t ThreadContext::asyncReadMem(void *dst, uint64_t src, size_t size)
     return rv;
   };
   std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
-  this->comq.pushRequest(std::move(req));
+  if(this->comq.pushRequest(std::move(req)))
+    return VEO_REQUEST_ID_INVALID;
   return id;
 }
 
@@ -44,7 +45,8 @@ uint64_t ThreadContext::asyncWriteMem(uint64_t dst, const void *src,
     return rv;
   };
   std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
-  this->comq.pushRequest(std::move(req));
+  if(this->comq.pushRequest(std::move(req)))
+    return VEO_REQUEST_ID_INVALID;
   return id;
 }
 } // namespace veo
