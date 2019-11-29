@@ -25,7 +25,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">VE Offloading
-   &#160;<span id="projectnumber">2.2.0</span>
+   &#160;<span id="projectnumber">2.2.2</span>
    </div>
   </td>
  </tr>
@@ -62,9 +62,9 @@ $(document).ready(function(){initNavTree('group__veoapi.html','');});
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga5216105cc184fc1ae12cdd475433fcc1"><td class="memItemLeft" align="right" valign="top">const int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga5216105cc184fc1ae12cdd475433fcc1">veo_api_version</a> ()</td></tr>
-<tr class="memdesc:ga5216105cc184fc1ae12cdd475433fcc1"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the API version of the VE Offload implementation  <a href="#ga5216105cc184fc1ae12cdd475433fcc1">More...</a><br/></td></tr>
-<tr class="separator:ga5216105cc184fc1ae12cdd475433fcc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0ee0e7300d78fa546f93012e91e676c7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga0ee0e7300d78fa546f93012e91e676c7">veo_api_version</a> ()</td></tr>
+<tr class="memdesc:ga0ee0e7300d78fa546f93012e91e676c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the API version of the VE Offload implementation  <a href="#ga0ee0e7300d78fa546f93012e91e676c7">More...</a><br/></td></tr>
+<tr class="separator:ga0ee0e7300d78fa546f93012e91e676c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga82344af8315b947a4b689fb698c78ef9"><td class="memItemLeft" align="right" valign="top">veo_proc_handle *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga82344af8315b947a4b689fb698c78ef9">veo_proc__create</a> (const char *ossock, const char *vedev, const char *binname)</td></tr>
 <tr class="memdesc:ga82344af8315b947a4b689fb698c78ef9"><td class="mdescLeft">&#160;</td><td class="mdescRight">lower level function to create a VE process  <a href="#ga82344af8315b947a4b689fb698c78ef9">More...</a><br/></td></tr>
 <tr class="separator:ga82344af8315b947a4b689fb698c78ef9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -98,6 +98,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga1999d72380998381df067cfcd9213030"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga1999d72380998381df067cfcd9213030">veo_call_async_by_name</a> (veo_thr_ctxt *ctx, uint64_t libhdl, const char *symname, veo_args *args)</td></tr>
 <tr class="memdesc:ga1999d72380998381df067cfcd9213030"><td class="mdescLeft">&#160;</td><td class="mdescRight">request a VE thread to call a function  <a href="#ga1999d72380998381df067cfcd9213030">More...</a><br/></td></tr>
 <tr class="separator:ga1999d72380998381df067cfcd9213030"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9b4e8a705da9fc62091056107e4eae60"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga9b4e8a705da9fc62091056107e4eae60">veo_call_async_vh</a> (veo_thr_ctxt *ctx, uint64_t(*func)(void *), void *arg)</td></tr>
+<tr class="memdesc:ga9b4e8a705da9fc62091056107e4eae60"><td class="mdescLeft">&#160;</td><td class="mdescRight">call a VH function asynchronously  <a href="#ga9b4e8a705da9fc62091056107e4eae60">More...</a><br/></td></tr>
+<tr class="separator:ga9b4e8a705da9fc62091056107e4eae60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaff69e830b0a20170ca775ec09f397101"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#gaff69e830b0a20170ca775ec09f397101">veo_call_peek_result</a> (veo_thr_ctxt *ctx, uint64_t reqid, uint64_t *retp)</td></tr>
 <tr class="memdesc:gaff69e830b0a20170ca775ec09f397101"><td class="mdescLeft">&#160;</td><td class="mdescRight">pick up a resutl from VE function if it has finished  <a href="#gaff69e830b0a20170ca775ec09f397101">More...</a><br/></td></tr>
 <tr class="separator:gaff69e830b0a20170ca775ec09f397101"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -172,12 +175,12 @@ Functions</h2></td></tr>
 <p>VE Offloading API functions. </p>
 <p>To use VEO API functions, include "ve_offload.h" header. </p>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="ga5216105cc184fc1ae12cdd475433fcc1"></a>
+<a class="anchor" id="ga0ee0e7300d78fa546f93012e91e676c7"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const int veo_api_version </td>
+          <td class="memname">int veo_api_version </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -631,6 +634,55 @@ Functions</h2></td></tr>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">VEO_REQUEST_ID_INVALID</td><td>request failed. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga9b4e8a705da9fc62091056107e4eae60"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint64_t veo_call_async_vh </td>
+          <td>(</td>
+          <td class="paramtype">veo_thr_ctxt *&#160;</td>
+          <td class="paramname"><em>ctx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint64_t(*)(void *)&#160;</td>
+          <td class="paramname"><em>func</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>arg</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>call a VH function asynchronously </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ctx</td><td>VEO context in which to execute the function. </td></tr>
+    <tr><td class="paramname">func</td><td>address of VH function to call </td></tr>
+    <tr><td class="paramname">arg</td><td>pointer to arguments structure for the function </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>request ID </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">VEO_REQUEST_ID_INVALID</td><td>if request failed. </td></tr>
   </table>
   </dd>
 </dl>
