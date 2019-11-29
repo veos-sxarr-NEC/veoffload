@@ -17,7 +17,6 @@
 #include <sys/shm.h>
 #include <libgen.h>
 
-
 #include <libved.h>
 /* VE OS internal headers */
 extern "C" {
@@ -269,7 +268,9 @@ int spawn_helper(ThreadContext *ctx, veos_handle *oshandle, const char *binname)
   // Set global TID array for main thread.
   global_tid_info[0].vefd = oshandle->ve_handle->vefd;
   global_tid_info[0].veos_hndl = oshandle;
+  pthread_mutex_lock(&tid_counter_mutex);
   tid_counter = 0;
+  pthread_mutex_unlock(&tid_counter_mutex);
   global_tid_info[0].tid_val = syscall(SYS_gettid); /*getpid();*/ // main thread
   global_tid_info[0].flag = 0;
   global_tid_info[0].mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -427,6 +428,13 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
 {
   int retval;
 
+  // determine VE#
+  int nmatch = sscanf(vedev, "/dev/veslot%d", &this->ve_number);
+  if (nmatch != 1) {
+    VEO_DEBUG(nullptr, "cannot determine VE node#: %s", vedev);
+    this->ve_number = -1;
+  }
+
   // open VE OS handle
   veos_handle *os_handle = veos_handle_create(const_cast<char *>(vedev),
                              const_cast<char *>(ossock), nullptr, -1);
@@ -475,6 +483,7 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
   DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, exit);
   // create worker
   CallArgs args_create_thread;
+  args_create_thread.set(0, -1);// FIXME: get the number of cores on VE
   this->main_thread->_doCall(this->funcs.create_thread, args_create_thread);
   uint64_t exc;
   // hook clone() on VE
@@ -495,6 +504,10 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
   this->waitForBlock();
 
   VEO_TRACE(this->worker.get(), "sp = %#lx", this->worker->ve_sp);
+  pthread_mutex_lock(&tid_counter_mutex);
+  this->setnumChildThreads(tid_counter);
+  pthread_mutex_unlock(&tid_counter_mutex);
+  VEO_DEBUG(this->worker.get(), "num_child_threads = %d", this->getnumChildThreads());
 }
 
 uint64_t doOnContext(ThreadContext *ctx, uint64_t func, CallArgs &args)
@@ -508,6 +521,15 @@ uint64_t doOnContext(ThreadContext *ctx, uint64_t func, CallArgs &args)
     throw VEOException("request failed", ENOSYS);
   }
   return ret;
+}
+
+/**
+ * @brief Set a num of child threads to check dynamic load or static link.
+ * 
+ * @param num child thread number when worker thread created
+ */
+int ProcHandle::setnumChildThreads(int num){
+  num_child_threads = num;
 }
 
 /**
@@ -622,6 +644,17 @@ ThreadContext *ProcHandle::openContext()
   std::lock_guard<std::mutex> lock(this->main_mutex);
 
   auto ctx = this->worker.get();
+  pthread_mutex_lock(&tid_counter_mutex);
+  /* FIXME */
+  int max_cpu_num = 8;
+  if (tid_counter > max_cpu_num - 1) { /* FIXME */
+    args.set(0, getnumChildThreads()%max_cpu_num);// same as worker thread
+    VEO_DEBUG(ctx, "num_child_threads = %d", getnumChildThreads());
+  } else {
+    args.set(0, -1);// any cpu
+    VEO_DEBUG(ctx, "num_child_threads = %d", getnumChildThreads());
+  }
+  pthread_mutex_unlock(&tid_counter_mutex);
   auto reqid = ctx->_callOpenContext(this, this->funcs.create_thread, args);
   uintptr_t ret;
   int rv = ctx->callWaitResult(reqid, &ret);

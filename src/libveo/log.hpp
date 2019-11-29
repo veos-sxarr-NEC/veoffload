@@ -33,6 +33,8 @@ void veo__log(const ThreadContext *, const log4c_location_info_t *,
 
 #define VEO_ASSERT(_cond) do { \
   if (!(_cond)) { \
+    fprintf(stderr, "%s %d: Assertion failure: %s\n", \
+              __FILE__, __LINE__, #_cond); \
     VEO_ERROR(nullptr, "%s %d: Assertion failure: %s", \
               __FILE__, __LINE__, #_cond); \
     abort(); \

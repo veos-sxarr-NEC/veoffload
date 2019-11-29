@@ -26,6 +26,7 @@ VERSION_1 {
     veo_args_set_stack;
     veo_call_async;
     veo_call_async_by_name;
+    veo_call_async_vh;
     veo_call_result;
     veo_call_peek_result;
     veo_call_wait_result;
@@ -44,6 +45,7 @@ VERSION_1 {
     global_tid_info;
     load_elf;
     tid_counter_mutex;
+    tid_counter;
     sync_fork_dma;
     ve_info;
     ve_page_info;

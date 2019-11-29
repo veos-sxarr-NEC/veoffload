@@ -10,6 +10,7 @@
 #include <signal.h>
 
 #include <libved.h>
+#include <veosinfo/veosinfo.h>
 
 /* VE OS internal headers */
 extern "C" {
@@ -152,6 +153,17 @@ int ThreadContext::handleSingleException(uint64_t &exs, SyscallFilter filter)
   if ((exs & EXS_MONT) || (exs & (UNCORRECTABLE_ERROR)) ||
       ((exs & (CORRECTABLE_ERROR)) && !(exs & (EXS_MONC|EXS_RDBG)))) {
     VEO_ERROR(this, "caused error (EXS=0x%016lx)", exs);
+    // get the current position
+    block_syscall_req_ve_os(this->os_handle);
+    pid_t tid = syscall(SYS_gettid);
+    int regid[] = {IC, ICE};
+    uint64_t regvals[2];
+    int ret = ve_get_regvals(this->proc->veNumber(), tid, 2, regid, regvals);
+    if (ret != 0) {
+      VEO_ERROR(this, "failed to get register values... (%d)", ret);
+    } else {
+      VEO_ERROR(this, "IC = %#lx, ICE = %#lx", regvals[0], regvals[1]);
+    }
     return VEO_HANDLER_STATUS_EXCEPTION;
   }
   if (break_flag) {
@@ -489,6 +501,32 @@ uint64_t ThreadContext::callAsyncByName(uint64_t libhdl, const char *symname, Ca
 {
   uint64_t addr = this->proc->getSym(libhdl, symname);
   return this->callAsync(addr, args);
+}
+
+/**
+ * @brief call a VH function asynchronously
+ *
+ * @param func address of VH function to call
+ * @param arg pointer to opaque arguments structure for the function
+ * @return request ID
+ */
+uint64_t ThreadContext::callVHAsync(uint64_t (*func)(void *), void *arg)
+{
+  if ( func == nullptr || this->state == VEO_STATE_EXIT)
+    return VEO_REQUEST_ID_INVALID;
+
+  auto id = this->issueRequestID();
+  auto f = [this, func, arg, id] (Command *cmd) {
+    VEO_TRACE(this, "[request #%lu] start...", id);
+    auto rv = (*func)(arg);
+    VEO_TRACE(this, "[request #%lu] executed. (return %ld)", id, rv);
+    cmd->setResult(rv, VEO_COMMAND_OK);
+    VEO_TRACE(this, "[request #%lu] done", id);
+    return 0;
+  };
+  std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
+  this->comq.pushRequest(std::move(req));
+  return id;
 }
 
 uint64_t ThreadContext::_callOpenContext(ProcHandle *proc,

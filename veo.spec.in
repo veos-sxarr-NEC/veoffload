@@ -12,8 +12,8 @@ Vendor: NEC Corporation
 Group: System Environment/Libraries
 License: LGPLv2+
 Source0: @PACKAGE@-@VERSION@.tar.gz
-Requires: veos log4c
-BuildRequires: log4c-devel veos-libvepseudo-headers
+Requires: veos log4c veosinfo
+BuildRequires: log4c-devel veos-libvepseudo-headers veosinfo-devel
 %if "%{libc}" == "glibc"
 Requires: veoffload-veorun
 BuildRequires: veoffload-veorun-devel
@@ -42,7 +42,8 @@ Requires: %{name} = %{version}-%{release}
 %setup -q -n @PACKAGE@-@VERSION@
 
 %build
-%configure --with-veorun=@VEORUN_BIN@ --with-veos-socket=@VEOS_SOCKET@
+%configure --with-veorun=@VEORUN_BIN@ --with-veos-socket=@VEOS_SOCKET@ \
+  --with-veorun-includedir=@veorun_includedir@
 %make_build
 
 %install

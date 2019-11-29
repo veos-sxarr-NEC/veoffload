@@ -10,6 +10,7 @@ edit = $(SED) -e 's|@PACKAGE[@]|@PACKAGE@|g' \
               -e 's|@prefix[@]|@prefix@|g' \
               -e 's|@libdir[@]|@libdir@|g' \
               -e 's|@includedir[@]|@includedir@|g' \
+              -e 's|@veorun_includedir[@]|@veorun_includedir@|g' \
               -e 's|@localstatedir[@]|@localstatedir@|g' \
               -e 's|@VEORUN_BIN[@]|@VEORUN_BIN@|g' \
               -e 's|@VEOS_SOCKET[@]|@VEOS_SOCKET@|g'

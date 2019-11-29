@@ -9,10 +9,8 @@ VEO does not support:
 
 The current veo_context_close() implementation remains threads on the VE side glibc when calling veo_context_close().
 
-By default, an OpenMP program statically linked can cause load imbalance of threads.
-If you set environmental veriable of OMP_NUM_THREADS to number of ve cores minus one, loaded threads are balanced in case of using statically linked program.
-By default, an OpenMP program for dynamic loading can load threads in balance.
-
 Ported commands such as /opt/nec/ve/bin/ps and /opt/nec/ve/bin/top do not show VE processes when they are created by a child thread on VH side using VEO API.
 
 Ported commands such as /opt/nec/ve/bin/free show memory used by these VE processes.
+
+No signals are delivered after veo_proc_create() or veo_proc_create_static() due to an issue of handlihng the signal mask, e.g. Ctrl-C and Ctrl-Z do not work.

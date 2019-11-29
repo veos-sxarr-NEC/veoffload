@@ -100,7 +100,7 @@ using veo::VEOException;
  *
  * @retval integer value with API version
  */
-const int veo_api_version()
+int veo_api_version()
 {
   return VEO_API_VERSION;
 }
@@ -399,6 +399,25 @@ uint64_t veo_call_async_by_name(veo_thr_ctxt *ctx, uint64_t libhdl,
 {
   try {
     return ThreadContextFromC(ctx)->callAsyncByName(libhdl, symname, *CallArgsFromC(args));
+  } catch (VEOException &e) {
+    return VEO_REQUEST_ID_INVALID;
+  }
+}
+
+/**
+ * @brief call a VH function asynchronously
+ *
+ * @param ctx VEO context in which to execute the function.
+ * @param func address of VH function to call
+ * @param arg pointer to arguments structure for the function
+ * @return request ID
+ * @retval VEO_REQUEST_ID_INVALID if request failed.
+ */
+uint64_t veo_call_async_vh(veo_thr_ctxt *ctx, uint64_t (*func)(void *),
+                           void *arg)
+{
+  try {
+    return ThreadContextFromC(ctx)->callVHAsync(func, arg);
   } catch (VEOException &e) {
     return VEO_REQUEST_ID_INVALID;
   }

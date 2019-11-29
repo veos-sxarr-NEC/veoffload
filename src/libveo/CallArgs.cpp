@@ -52,13 +52,9 @@ template<typename T> void set_value(std::string &str, size_t offset, T value)
   }
 }
 
-//XXX: long double and _Complex are not supported.
 template<typename T> class ArgType: public ArgBase {
   static_assert(std::is_fundamental<T>::value, "not fundamental type.");
-  static_assert(std::is_integral<T>::value || std::is_same<T, double>::value,
-    "integer or double are supported");
-  static_assert(!std::is_same<T, float>::value,
-    "float requires specialization due to ABI");
+  static_assert(std::is_integral<T>::value, "integer types are supported");
   T value_;
 public:
   explicit ArgType(const T arg): value_(arg) {}
@@ -71,7 +67,7 @@ public:
    * @return a value to be set to on a register
    */
   int64_t getRegVal(uint64_t sp, int n_args, size_t &used_size) const {
-    return *reinterpret_cast<const int64_t *>(&this->value_);
+    return static_cast<int64_t>(this->value_);
   }
 
   void setStackImage(uint64_t sp, std::string &stack, int n,
@@ -88,6 +84,32 @@ public:
     set_value(stack, pos, this->value_);
   }
 
+  size_t sizeOnStack() const { return 0;}
+  void copyoutFromStackImage(uint64_t sp, const char *img){}// nothing
+};
+
+template<> class ArgType<double>: public ArgBase {
+  union u {
+    double d_;
+    int64_t i64_;
+    u(double d): d_(d) {}
+  } u_;
+public:
+  explicit ArgType(const double d): u_(d) {}
+  int64_t getRegVal(uint64_t sp, int n_args, size_t &used_size) const {
+    return this->u_.i64_;
+  }
+  void setStackImage(uint64_t sp, std::string &stack, int n,
+                     bool &in, bool &out) {
+    VEO_TRACE(nullptr, "%s(%#lx, _, %d)", __func__, sp, n);
+    out = false;
+    in = false;
+    if (n < NUM_ARGS_ON_REGISTER)
+      return;// do nothing
+    in = true;
+    auto pos = PARAM_AREA_OFFSET + n * 8;
+    set_value(stack, pos, this->u_.i64_);
+  }
   size_t sizeOnStack() const { return 0;}
   void copyoutFromStackImage(uint64_t sp, const char *img){}// nothing
 };

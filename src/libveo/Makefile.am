@@ -26,4 +26,4 @@ libveo_la_CPPFLAGS = -DVEOS_SOCKET=\"$(VEOS_SOCKET)\" \
 # to avoid comilation error on ve_list.h
 libveo_la_CXXFLAGS = -fpermissive
 
-libveo_la_LDFLAGS = -lvepseudo -Wl,--version-script=$(srcdir)/libveo.map
+libveo_la_LDFLAGS = -lvepseudo -lveosinfo -Wl,--version-script=$(srcdir)/libveo.map

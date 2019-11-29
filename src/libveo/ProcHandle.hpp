@@ -38,6 +38,8 @@ private:
   std::unique_ptr<ThreadContext> main_thread;
   std::unique_ptr<ThreadContext> worker;
   struct veo__helper_functions funcs;
+  int num_child_threads;
+  int ve_number;
 
   /**
    * @brief run VE main thread until BLOCK call.
@@ -50,6 +52,7 @@ private:
     }
   }
   veos_handle *osHandle() { return this->main_thread->os_handle; }
+
 public:
   ProcHandle(const char *, const char *, const char *);
   ~ProcHandle();
@@ -62,7 +65,8 @@ public:
 
   int readMem(void *, uint64_t, size_t);
   int writeMem(uint64_t, const void *, size_t);
-
+  int setnumChildThreads(int );
+  int getnumChildThreads(){ return num_child_threads; };
   void exitProc(void);
 
   ThreadContext *openContext();
@@ -70,6 +74,8 @@ public:
   veo_proc_handle *toCHandle() {
     return reinterpret_cast<veo_proc_handle *>(this);
   }
+
+  int veNumber() { return this->ve_number; }
 };
 } // namespace veo
 #endif
