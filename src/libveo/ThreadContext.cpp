@@ -22,6 +22,8 @@ extern "C" {
 enum ve_syscall_number {
 #include "ve_syscall_no.h"
 };
+
+extern __thread sigset_t ve_proc_sigmask;
 } // extern "C"
 
 #include "CallArgs.hpp"
@@ -114,10 +116,18 @@ int ThreadContext::handleSingleException(uint64_t &exs, SyscallFilter filter)
 {
   int ret;
   int break_flag = 0;
+  sigset_t signal_mask;
+
+  sigfillset(&signal_mask);
+
   VEO_TRACE(this, "%s()", __func__);
   constexpr uint64_t VEO_EXCEPTION_MASK = ~0xffUL;
   for (;;) {
+    // restore the signal mask before entering VE driver.
+    pthread_sigmask(SIG_SETMASK, &ve_proc_sigmask, NULL);
     ret = vedl_wait_exception(this->os_handle->ve_handle, &exs);
+    // Block all signals
+    pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
     if (ret != 0) {
       if ( ret == -1 && errno == EINTR )
         continue;
@@ -339,6 +349,8 @@ void ThreadContext::startEventLoop(veos_handle *newhdl, sem_t *sem)
    * used internally; pthread_cancel() still works.
    */
   sigfillset(&sigmask);
+  sigdelset(&sigmask, SIGCONT);// SIGCONT shall never be masked.
+  ve_proc_sigmask = sigmask;
   pthread_sigmask(SIG_BLOCK, &sigmask, NULL);
   this->os_handle = newhdl;// replace to a new handle for the child thread.
   this->pseudo_thread = pthread_self();
@@ -383,8 +395,15 @@ bool ThreadContext::_executeVE(int &status, uint64_t &exs)
  */
 void ThreadContext::eventLoop()
 {
+  sigset_t signal_mask;
+  sigfillset(&signal_mask);
+
   while (this->state == VEO_STATE_BLOCKED) {
+    // Restore the signal mask before popping queue.
+    pthread_sigmask(SIG_SETMASK, &ve_proc_sigmask, NULL);
     auto command = std::move(this->comq.popRequest());
+    // Block all signals
+    pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
     auto rv = (*command)();
     if (rv != 0) {
       this->state = VEO_STATE_EXIT;

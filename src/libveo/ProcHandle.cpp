@@ -29,6 +29,8 @@ extern "C" {
 #include "vemva_mgmt.h"
 #include "loader.h"
 #include "pseudo_ptrace.h"
+
+void ve_sa_sigaction_handler(int, siginfo_t *, void *);
 #undef new
 
 /* symbols required but undefined in libvepseudo */
@@ -213,6 +215,19 @@ void close_syscall_args_file(int fd, char *sfile_name)
         PSEUDO_TRACE("Exiting");
 }
 
+void veo_sigcont_handler(int signo, siginfo_t *siginfo, void *uctx)
+{
+  VEO_ASSERT(signo == SIGCONT);
+  if (g_handle) {
+    ve_sa_sigaction_handler(signo, siginfo, uctx);
+  } else {
+    // This thread cannot handle the signal because it does not have
+    // its VEOS handle. Send the same signal again.
+    kill(getpid(), signo);
+    sched_yield();
+  }
+}
+
 /**
  * @brief create a VE process and initialize a thread context
  *
@@ -222,21 +237,6 @@ void close_syscall_args_file(int fd, char *sfile_name)
  */
 int spawn_helper(ThreadContext *ctx, veos_handle *oshandle, const char *binname)
 {
-  class Finally {
-    sigset_t saved_mask;
-  public:
-    Finally() {
-      sigset_t mask;
-      sigfillset(&mask);
-      sigprocmask(SIG_BLOCK, &mask, &this->saved_mask);
-      memcpy(&ve_proc_sigmask, &this->saved_mask, sizeof(this->saved_mask));
-    }
-    ~Finally() {
-      // restore the signal mask of main thread on returning from spawn_helper.
-      sigprocmask(SIG_SETMASK, &this->saved_mask, nullptr);
-    }
-  } finally_;
-
   /* necessary to allocate PATH_MAX because VE OS requests to
    * transfer PATH_MAX. */
   char helper_name[PATH_MAX];
@@ -412,6 +412,17 @@ int spawn_helper(ThreadContext *ctx, veos_handle *oshandle, const char *binname)
     VEO_ERROR(ctx, "Failed to receive START VE PROC ack (%d)", retval);
     return retval;
   }
+  // register a signal handler
+  struct sigaction pseudo_act;
+  memset(&pseudo_act, 0, sizeof(pseudo_act));
+  pseudo_act.sa_sigaction = &veo_sigcont_handler;
+  pseudo_act.sa_flags = SA_SIGINFO;
+  retval = sigaction(SIGCONT, &pseudo_act, NULL);
+  if (0 > retval) {
+    VEO_ERROR(ctx, "sigaction for SIGCONT failed (errno = %d)", errno);
+    process_thread_cleanup(oshandle, -1);
+    return retval;
+  }
   VEO_TRACE(ctx, "%s: Succeed to create a VE process.", __func__);
   return 0;
 }
@@ -427,6 +438,23 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
                        const char *binname)
 {
   int retval;
+
+  class Finally {
+    sigset_t saved_mask;
+  public:
+    Finally() {
+      sigset_t mask;
+      sigfillset(&mask);
+      sigprocmask(SIG_BLOCK, &mask, &this->saved_mask);
+      memcpy(&ve_proc_sigmask, &this->saved_mask, sizeof(this->saved_mask));
+    }
+    ~Finally() {
+      // restore the signal mask of main thread on return
+      sigprocmask(SIG_SETMASK, &this->saved_mask, nullptr);
+      // Thread-local VEOS handle for main is no longer used.
+      g_handle = NULL;
+    }
+  } finally_;
 
   // determine VE#
   int nmatch = sscanf(vedev, "/dev/veslot%d", &this->ve_number);
