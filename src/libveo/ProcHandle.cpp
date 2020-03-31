@@ -7,6 +7,7 @@
 #include "VEOException.hpp"
 #include "CallArgs.hpp"
 #include "log.hpp"
+#include "CommandImpl.hpp"
 
 #include <string.h>
 #include <unistd.h>
@@ -438,6 +439,7 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
                        const char *binname)
 {
   int retval;
+  size_t funcs_sz;
 
   class Finally {
     sigset_t saved_mask;
@@ -493,12 +495,20 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
   // sysve(VEO_BLOCK, &veo__helper_functions);
   uint64_t funcs_addr = this->main_thread->_collectReturnValue();
   VEO_DEBUG(this->main_thread.get(), "helper functions set: %p\n", (void *)funcs_addr);
-  int rv = ve_recv_data(os_handle, funcs_addr, sizeof(this->funcs),
-                        &this->funcs);
+  int rv = ve_recv_data(os_handle, funcs_addr, sizeof(uint64_t), &this->funcs);
   if (rv != 0) {
     throw VEOException("Failed to receive data from VE");
   }
-  VEO_ASSERT(this->funcs.version == VEORUN_VERSION);
+  VEO_ASSERT(this->funcs.version >= VEORUN_VERSION2);
+  if (this->funcs.version == VEORUN_VERSION3) {
+    funcs_sz = sizeof(struct veo__helper_functions_ver3);
+  } else {
+    funcs_sz =  sizeof(struct veo__helper_functions_ver2);
+  }
+  rv = ve_recv_data(os_handle, funcs_addr, funcs_sz, &this->funcs);
+  if (rv != 0) {
+    throw VEOException("Failed to receive data from VE");
+  }
 #define DEBUG_PRINT_HELPER(ctx, data, member) \
   VEO_DEBUG(ctx, #member " = %#lx", data.member)
   DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, version);
@@ -509,6 +519,9 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
   DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, create_thread);
   DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, call_func);
   DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, exit);
+  if (this->funcs.version == VEORUN_VERSION3)
+    DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs,
+                       create_thread_with_attr);
   // create worker
   CallArgs args_create_thread;
   args_create_thread.set(0, -1);// FIXME: get the number of cores on VE
@@ -653,7 +666,48 @@ void ProcHandle::freeBuff(const uint64_t buff)
  */
 void ProcHandle::exitProc()
 {
+  CallArgs args;
+  uint64_t ret;
+  uint64_t exc;
+
   std::lock_guard<std::mutex> lock(this->main_mutex);
+
+  VEO_TRACE(nullptr, "call exit(%p, %#lx, ...)", this->worker.get(), this->funcs.exit);
+  if ( this->funcs.exit == 0 || this->main_thread->state == VEO_STATE_EXIT)
+    return;
+
+  auto id = this->worker.get()->issueRequestID();
+  auto f = [&args, this, id] (Command *cmd) {
+    this->worker.get()->_doCall(this->funcs.exit, args);
+    int status;
+    uint64_t exs;
+    auto successful = this->worker.get()->exceptionHandler(exs,
+			&ThreadContext::exitFilter);
+    if (!successful) {
+      if (status == VEO_HANDLER_STATUS_EXCEPTION) {
+        cmd->setResult(exs, VEO_COMMAND_EXCEPTION);
+      } else {
+        cmd->setResult(status, VEO_COMMAND_ERROR);
+      }
+      return 1;
+    }
+    cmd->setResult(0, VEO_COMMAND_OK);
+
+    // post
+    auto readmem = std::bind(&ThreadContext::_readMem, this->worker.get(),
+                             std::placeholders::_1, std::placeholders::_2,
+                             std::placeholders::_3);
+    args.copyout(readmem);
+    return 0;
+  };
+  std::unique_ptr<Command> req(new internal::CommandImpl(id, f));
+  if(this->worker.get()->comq.pushRequest(std::move(req)))
+    id = VEO_REQUEST_ID_INVALID;
+
+  VEO_TRACE(nullptr, "[request #%d] pushRequest", id);
+  auto c = this->worker.get()->comq.waitCompletion(id);
+
+  /* exitProc() */
   VEO_TRACE(this->main_thread.get(), "%s()", __func__);
   process_thread_cleanup(this->osHandle(), -1);
   this->main_thread.get()->state = VEO_STATE_EXIT;
@@ -684,6 +738,45 @@ ThreadContext *ProcHandle::openContext()
   }
   pthread_mutex_unlock(&tid_counter_mutex);
   auto reqid = ctx->_callOpenContext(this, this->funcs.create_thread, args);
+  uintptr_t ret;
+  int rv = ctx->callWaitResult(reqid, &ret);
+  if (rv != VEO_COMMAND_OK) {
+    VEO_ERROR(ctx, "openContext failed (%d)", rv);
+    throw VEOException("request failed", ENOSYS);
+  }
+  return reinterpret_cast<ThreadContext *>(ret);
+}
+
+/**
+ * @brief open a new context (VE thread) with attributes
+ *
+ * @param[in] attr attributes of a new context
+ *
+ * @return a new thread context created
+ */
+ThreadContext *ProcHandle::openContext(ThreadContextAttr &attr)
+{
+  CallArgs args;
+  std::lock_guard<std::mutex> lock(this->main_mutex);
+
+  auto ctx = this->worker.get();
+  pthread_mutex_lock(&tid_counter_mutex);
+  /* FIXME */
+  int max_cpu_num = 8;
+  int cpu;
+  struct veo__thread_attribute_ver3 attr_v3;
+  if (tid_counter > max_cpu_num - 1) { /* FIXME */
+    cpu = getnumChildThreads()%max_cpu_num;// same as worker thread
+  } else {
+    cpu = -1;// any cpu
+  }
+  VEO_DEBUG(ctx, "num_child_threads = %d", getnumChildThreads());
+  pthread_mutex_unlock(&tid_counter_mutex);
+  attr_v3.cpu = cpu;
+  attr_v3.stack_sz = attr.getStacksize();
+  VEO_DEBUG(ctx, "attributes: cpu %d, stack_sz 0x%lx", attr_v3.cpu, attr_v3.stack_sz);
+  args.setOnStack(VEO_INTENT_IN, 0, reinterpret_cast<char *>(&attr_v3), sizeof(struct veo__thread_attribute_ver3));
+  auto reqid = ctx->_callOpenContext(this, this->funcs.create_thread_with_attr, args);
   uintptr_t ret;
   int rv = ctx->callWaitResult(reqid, &ret);
   if (rv != VEO_COMMAND_OK) {

@@ -117,6 +117,7 @@ int main()
   veo_call_wait_result(ctx, id, &retval);
   veo_args_free(argp);
   veo_context_close(ctx);
+  veo_proc_destroy(proc);
   return 0;
 }
 ~~~
@@ -150,6 +151,7 @@ int main()
   veo_call_wait_result(ctx, id, &retval);
   veo_args_free(argp);
   veo_context_close(ctx);
+  veo_proc_destroy(proc);
   return 0;
 }
 ~~~
@@ -252,6 +254,22 @@ The third argument specifies the argument is for input and/or output.
  - VEO_INTENT_INOUT: the argument is for both input and output;
   data is copied into and out from a VE stack area.
 
+## Attributes for VEO context
+
+You can create a VEO context which has a specified attribute.
+
+Available attribute is 'stack size of VEO context' only.
+
+For instance: suppose that proc is a VEO process handle.
+~~~c
+#define STACK_SZ (256 * 1024 * 1024)
+struct veo_thr_ctxt_attr *attr = veo_alloc_thr_ctxt_attr();
+veo_set_thr_ctxt_stacksize(attr, STACK_SZ);
+struct veo_thr_ctxt *ctx = veo_context_open_with_attr(proc, attr);
+~~~
+
+In this case, VEO context which has a 256MB stack is created.
+
 ##How to call the function written by Fortran
 
 ###VE Code (Fortran)
@@ -314,6 +332,7 @@ int main()
   printf("FUNC1 return %lu\n", retval);
   veo_args_free(argp);
   veo_context_close(ctx);
+  veo_proc_destroy(proc);
   return 0;
 }
 ~~~
@@ -346,6 +365,109 @@ $ ./fortran
 SUB1 return 43
 FUNC1 return 3
 ~~~
+
+##How to parallelize code using OpenMP
+
+###VE code using OpenMP
+
+The following is an example of VE code using OpenMP written in C.
+
+~~~
+#include <stdio.h>
+int omp_hello(void)
+{
+  int tid, nthreads = 0;
+#pragma omp parallel private(nthreads, tid)
+  {
+    tid = omp_get_thread_num();
+    printf("Hello, World! from thread = %d\n", tid);
+    if (tid == 0)
+    {
+      nthreads = omp_get_num_threads();
+      printf("Number of threads = %d\n", nthreads);
+    }
+  }  /* All threads join master thread and disband */
+  fflush(stdout);
+  return 0;
+}
+
+~~~
+Save the above code in libomphello.c
+
+The following shows the example written in Fortran.
+
+~~~
+INTEGER FUNCTION OMP_HELLO()
+  INTEGER :: TID = 0
+  INTEGER :: NTHREADS = 0
+!$OMP PARALLEL PRIVATE(TID, NTHREADS)
+  TID = omp_get_thread_num()
+  write(*,*) "Hello, World! from thread = ", TID
+  IF ( TID == 0 ) THEN
+    NTHREADS = omp_get_num_threads()
+    OMP_HELLO = NTHREADS
+    WRITE(*,*) "Number of threads = ", NTHREADS
+  END IF
+!$OMP END PARALLEL
+END FUNCTION OMP_HELLO
+~~~
+Save the above code in libompfortran.f90.
+
+###How to build VE code
+To use OpenMP parallelization, specify -fopenmp at compilation and linking.
+
+Here is an example of building VE code written in C.
+To build a static-linked binary, execute as follows:
+~~~
+/opt/nec/ve/bin/ncc -c -o libomphello.o libomphello.c -fopenmp
+/opt/nec/ve/bin/mk_veorun_static -o veorun_omphello libomphello.o -fopenmp
+~~~
+
+To build a shared library, execute as follows:
+~~~
+/opt/nec/ve/bin/ncc -fpic -shared -o libomphello.so libomphello.c -fopenmp
+~~~
+To build code written in Fortran, change the compiler to nfort.
+
+##How to get ftrace.out
+
+To generate a ftrace.out, specify "-ftrace" option at compilation and linking VE code. A ftrace.out is generated on invocation of veo_proc_destroy() from VH main program.
+Here is an example of building VE code wiritten in C using or not using OpenMP.
+
+###How to build VE code not using OpenMP
+
+To build a static-linked binary without OpenMP for ftrace, execute as follows:
+
+~~~
+$ /opt/nec/ve/bin/ncc -ftrace -c -o libvehello.o libvehello.c
+$ /opt/nec/ve/bin/mk_veorun_static -ftrace -o veorun_static libvehello.o
+~~~
+
+To build a shared library for ftrace, execute as follows:
+
+~~~
+$ /opt/nec/ve/bin/ncc -ftrace -shared -fpic -o libvehello.so libvehello.c -lveftrace_t
+~~~
+To build code written in Fortran, change the compiler to nfort.
+
+
+###How to build VE code using OpenMP
+
+To build a static-linked binary with OpenMP for ftrace, execute as follows:
+
+~~~
+$ /opt/nec/ve/bin/ncc -ftrace -c -o libomphello.o libomphello.c -fopenmp
+$ /opt/nec/ve/bin/mk_veorun_static -ftrace -o veorun_omphello libomphello.o -fopenmp
+~~~
+
+To build a shared library for ftrace, execute as follows:
+
+~~~
+$ /opt/nec/ve/bin/ncc -ftrace -shared -fpic -o libomphello.so libomphello.c -lveftrace_p -fopenmp 
+~~~
+
+To build code written in Fortran, change the compiler to nfort.
+
 
 ##How to get log file
 Create a file named .log4crc in your home directory.

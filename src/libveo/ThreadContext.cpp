@@ -34,6 +34,10 @@ extern __thread sigset_t ve_proc_sigmask;
 #include "VEOException.hpp"
 #include "log.hpp"
 
+#define VEO_DEFAULT_STACK_SIZE   0x4000000
+/* PTHREAD_STACK_MIN in VE-glibc */
+#define VEO_STACK_MIN (4 * 1024 * 1024)
+
 namespace veo {
 namespace internal {
 /**
@@ -205,11 +209,13 @@ bool ThreadContext::defaultFilter(int sysnum, int *break_flag)
     return true;
   }
   if (internal::is_veo_block(this->os_handle->ve_handle, sysnum)) {
+    VEO_DEBUG(this, "system call %d is called.", sysnum);
     block_syscall_req_ve_os(this->os_handle);// notify VEOS of BLOCKED state.
     *break_flag = VEO_HANDLER_STATUS_BLOCK_REQUESTED;
     this->state = VEO_STATE_BLOCKED;
     return true;
   }
+  VEO_TRACE(this, "%s() returns false.", __func__);
   return false;
 }
 
@@ -234,6 +240,29 @@ bool ThreadContext::hookCloneFilter(int sysnum, int *break_flag)
   if (sysnum == NR_ve_clone) {
     VEO_TRACE(this, "clone() is requested (thread %d).", this->pseudo_thread);
     *break_flag = NR_ve_clone;
+    return true;
+  }
+  return this->defaultFilter(sysnum, break_flag);
+}
+
+/**
+ * @brief A system call filter to catch exit_group() call.
+ *
+ * @param sysnum System call number
+ * @param[out] break_flag VEO_HANDLER_STATUS_BLOCK_REQUESTED is set
+ *                        when the system call is a block request;
+ *                        NR_ve_exit_group on exit_group() system call; and
+ *                        zero is set, otherwise.
+ * @retval true upon filtered.
+ * @retval false upon system call not filtered.
+ */
+bool ThreadContext::exitFilter(int sysnum, int *break_flag)
+{
+  VEO_TRACE(this, "%s(%d)", __func__, sysnum);
+  *break_flag = 0;
+  if (sysnum == NR_ve_exit_group) {
+    VEO_TRACE(this, "exit_ve_group() is requested (thread %d).", this->pseudo_thread);
+    *break_flag = NR_ve_exit_group;
     return true;
   }
   return this->defaultFilter(sysnum, break_flag);
@@ -686,4 +715,31 @@ bool _is_clone_request(int rv_handler)
 {
   return rv_handler == NR_ve_clone;
 }
+
+/**
+ * @brief determinant of exit() system call
+ */
+bool _is_exit_request(int rv_handler)
+{
+  return rv_handler == NR_ve_exit_group;
+}
+
+/**
+ * @brief constructor
+ */
+ThreadContextAttr::ThreadContextAttr()
+{
+  this->stacksize = VEO_DEFAULT_STACK_SIZE;
+}
+
+void ThreadContextAttr::setStacksize(size_t stack_sz)
+{
+  if (stack_sz < VEO_STACK_MIN) {
+    VEO_ERROR(nullptr, "stack size of VEO context must be more equal to 0x%lx", VEO_STACK_MIN);
+    throw VEOException("invalid stack size of VEO context", EINVAL);
+  }
+  this->stacksize = stack_sz;
+}
+
+
 } // namespace veo

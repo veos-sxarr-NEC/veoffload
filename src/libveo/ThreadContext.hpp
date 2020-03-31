@@ -51,6 +51,7 @@ private:
 
   bool defaultFilter(int, int *);
   bool hookCloneFilter(int, int *);
+  bool exitFilter(int, int*);
   int handleSingleException(uint64_t &, SyscallFilter);
   /**
    * @brief exception handler while RUNNING
@@ -130,5 +131,27 @@ public:
 };
 
 bool _is_clone_request(int);
+bool _is_exit_request(int);
+
+/**
+ * @brief VEO thread context attributes
+ */
+
+class ThreadContextAttr {
+private:
+  size_t stacksize;
+
+public:
+  ThreadContextAttr();
+  ~ThreadContextAttr() {};
+
+  void setStacksize(size_t);
+  size_t getStacksize() { return this->stacksize;}
+
+  veo_thr_ctxt_attr *toCHandle() {
+    return reinterpret_cast<veo_thr_ctxt_attr *>(this);
+  }
+};
+
 } // namespace veo
 #endif

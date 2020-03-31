@@ -24,7 +24,7 @@
 #ifndef _VE_OFFLOAD_H_
 #define _VE_OFFLOAD_H_
 
-#define VEO_API_VERSION 7
+#define VEO_API_VERSION 8
 #define VEO_SYMNAME_LEN_MAX (255)
 #define VEO_LOG_CATEGORY "veos.veo.veo"
 #define VEO_MAX_NUM_ARGS (32)
@@ -66,6 +66,7 @@ enum veo_queue_state {
 struct veo_args;
 struct veo_proc_handle;
 struct veo_thr_ctxt;
+struct veo_thr_ctxt_attr;
 
 struct veo_proc_handle *veo_proc_create(int);
 struct veo_proc_handle *veo_proc_create_static(int, const char *);
@@ -78,6 +79,11 @@ uint64_t veo_get_sym(struct veo_proc_handle *, uint64_t, const char *);
 struct veo_thr_ctxt *veo_context_open(struct veo_proc_handle *);
 int veo_context_close(struct veo_thr_ctxt *);
 int veo_get_context_state(struct veo_thr_ctxt *);
+struct veo_thr_ctxt *veo_context_open_with_attr(struct veo_proc_handle *, struct veo_thr_ctxt_attr *);
+struct veo_thr_ctxt_attr *veo_alloc_thr_ctxt_attr();
+int veo_set_thr_ctxt_stacksize(struct veo_thr_ctxt_attr *, size_t);
+int veo_get_thr_ctxt_stacksize(struct veo_thr_ctxt_attr *, size_t *);
+int veo_free_thr_ctxt_attr(struct veo_thr_ctxt_attr *);
 
 struct veo_args *veo_args_alloc(void);
 int veo_args_set_i64(struct veo_args *, int, int64_t);

@@ -37,7 +37,7 @@ private:
   std::mutex main_mutex;//!< acquire while using main_thread
   std::unique_ptr<ThreadContext> main_thread;
   std::unique_ptr<ThreadContext> worker;
-  struct veo__helper_functions funcs;
+  struct veo__helper_functions_ver3 funcs;
   int num_child_threads;
   int ve_number;
 
@@ -70,12 +70,14 @@ public:
   void exitProc(void);
 
   ThreadContext *openContext();
-  
+  ThreadContext *openContext(ThreadContextAttr &);
+
   veo_proc_handle *toCHandle() {
     return reinterpret_cast<veo_proc_handle *>(this);
   }
 
   int veNumber() { return this->ve_number; }
+  uint64_t getVeorunVersion() { return this->funcs.version; }
 };
 } // namespace veo
 #endif
