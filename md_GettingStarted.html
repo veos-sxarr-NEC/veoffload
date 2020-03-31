@@ -25,7 +25,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">VE Offloading
-   &#160;<span id="projectnumber">2.3.0</span>
+   &#160;<span id="projectnumber">2.4.1</span>
    </div>
   </td>
  </tr>
@@ -124,6 +124,7 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <div class="line">  <a class="code" href="group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb" title="pick up a resutl from VE function ">veo_call_wait_result</a>(ctx, <span class="keywordtype">id</span>, &amp;retval);</div>
 <div class="line">  <a class="code" href="group__veoapi.html#ga3896858cc2ef3417c00843a3cd84b760" title="free VEO arguments object ">veo_args_free</a>(argp);</div>
 <div class="line">  <a class="code" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close</a>(ctx);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#gabf0ca7fb54ada334ed1a8c64fe749418" title="destroy a VE process ">veo_proc_destroy</a>(proc);</div>
 <div class="line">  <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><p> Save the above code as hello.c.</p>
@@ -150,6 +151,7 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <div class="line">  <a class="code" href="group__veoapi.html#gabdd86efca5bb7079e28a28c015c2c9fb" title="pick up a resutl from VE function ">veo_call_wait_result</a>(ctx, <span class="keywordtype">id</span>, &amp;retval);</div>
 <div class="line">  <a class="code" href="group__veoapi.html#ga3896858cc2ef3417c00843a3cd84b760" title="free VEO arguments object ">veo_args_free</a>(argp);</div>
 <div class="line">  <a class="code" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close</a>(ctx);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#gabf0ca7fb54ada334ed1a8c64fe749418" title="destroy a VE process ">veo_proc_destroy</a>(proc);</div>
 <div class="line">  <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><p> To call a VE function in a dynamic library with VEO:</p>
@@ -204,6 +206,15 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <li>VEO_INTENT_OUT: the argument is for output; a VE stack area is allocated without copy-in and data is copied out to VH memory on completion.</li>
 <li>VEO_INTENT_INOUT: the argument is for both input and output; data is copied into and out from a VE stack area.</li>
 </ul>
+<h2>Attributes for VEO context</h2>
+<p>You can create a VEO context which has a specified attribute.</p>
+<p>Available attribute is 'stack size of VEO context' only.</p>
+<p>For instance: suppose that proc is a VEO process handle. </p>
+<div class="fragment"><div class="line"><span class="preprocessor">#define STACK_SZ (256 * 1024 * 1024)</span></div>
+<div class="line"><span class="preprocessor"></span><span class="keyword">struct </span>veo_thr_ctxt_attr *attr = <a class="code" href="group__veoapi.html#gaf8f9b9ce664bb85eac759a2c1a8ca37d" title="allocate and initialize VEO thread context attributes object (veo_thr_ctxt_attr). ...">veo_alloc_thr_ctxt_attr</a>();</div>
+<div class="line"><a class="code" href="group__veoapi.html#gae3a7815b5156d0bc2823379c3b1adf75" title="set stack size of VE thread which executes a VE function. ">veo_set_thr_ctxt_stacksize</a>(attr, STACK_SZ);</div>
+<div class="line"><span class="keyword">struct </span>veo_thr_ctxt *ctx = <a class="code" href="group__veoapi.html#ga9f02a3ce6d7f8c6b8449772c95c473b1" title="open a VEO context with attributes. ">veo_context_open_with_attr</a>(proc, attr);</div>
+</div><!-- fragment --><p>In this case, VEO context which has a 256MB stack is created.</p>
 <h2>How to call the function written by Fortran</h2>
 <h3>VE Code (Fortran)</h3>
 <p>Code written by Fortran to run on VE is shown below.</p>
@@ -253,6 +264,7 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <div class="line">  printf(<span class="stringliteral">&quot;FUNC1 return %lu\n&quot;</span>, retval);</div>
 <div class="line">  <a class="code" href="group__veoapi.html#ga3896858cc2ef3417c00843a3cd84b760" title="free VEO arguments object ">veo_args_free</a>(argp);</div>
 <div class="line">  <a class="code" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea" title="close a VEO context ">veo_context_close</a>(ctx);</div>
+<div class="line">  <a class="code" href="group__veoapi.html#gabf0ca7fb54ada334ed1a8c64fe749418" title="destroy a VE process ">veo_proc_destroy</a>(proc);</div>
 <div class="line">  <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><p> Save the above code as fortran.c.</p>
@@ -269,7 +281,77 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <div class="fragment"><div class="line">$ ./fortran</div>
 <div class="line">SUB1 <span class="keywordflow">return</span> 43</div>
 <div class="line">FUNC1 <span class="keywordflow">return</span> 3</div>
-</div><!-- fragment --><h2>How to get log file</h2>
+</div><!-- fragment --><h2>How to parallelize code using OpenMP</h2>
+<h3>VE code using OpenMP</h3>
+<p>The following is an example of VE code using OpenMP written in C.</p>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
+<div class="line"><span class="keywordtype">int</span> omp_hello(<span class="keywordtype">void</span>)</div>
+<div class="line">{</div>
+<div class="line">  <span class="keywordtype">int</span> tid, nthreads = 0;</div>
+<div class="line"><span class="preprocessor">#pragma omp parallel private(nthreads, tid)</span></div>
+<div class="line"><span class="preprocessor"></span>  {</div>
+<div class="line">    tid = omp_get_thread_num();</div>
+<div class="line">    printf(<span class="stringliteral">&quot;Hello, World! from thread = %d\n&quot;</span>, tid);</div>
+<div class="line">    <span class="keywordflow">if</span> (tid == 0)</div>
+<div class="line">    {</div>
+<div class="line">      nthreads = omp_get_num_threads();</div>
+<div class="line">      printf(<span class="stringliteral">&quot;Number of threads = %d\n&quot;</span>, nthreads);</div>
+<div class="line">    }</div>
+<div class="line">  }  <span class="comment">/* All threads join master thread and disband */</span></div>
+<div class="line">  fflush(stdout);</div>
+<div class="line">  <span class="keywordflow">return</span> 0;</div>
+<div class="line">}</div>
+</div><!-- fragment --><p> Save the above code in libomphello.c</p>
+<p>The following shows the example written in Fortran.</p>
+<div class="fragment"><div class="line">INTEGER FUNCTION OMP_HELLO()</div>
+<div class="line">  INTEGER :: TID = 0</div>
+<div class="line">  INTEGER :: NTHREADS = 0</div>
+<div class="line">!$OMP PARALLEL PRIVATE(TID, NTHREADS)</div>
+<div class="line">  TID = omp_get_thread_num()</div>
+<div class="line">  WRITE(*,*) &quot;Hello, World! from thread = &quot;, TID</div>
+<div class="line">  IF ( TID == 0 ) THEN</div>
+<div class="line">    NTHREADS = omp_get_num_threads()</div>
+<div class="line">    OMP_HELLO = NTHREADS</div>
+<div class="line">    WRITE(*,*) &quot;Number of threads = &quot;, NTHREADS</div>
+<div class="line">  END IF</div>
+<div class="line">!$OMP END PARALLEL</div>
+<div class="line">END FUNCTION OMP_HELLO</div>
+</div><!-- fragment --><p> Save the above code in libompfortran.f90.</p>
+<h3>How to build VE code</h3>
+<p>To use OpenMP parallelization, specify -fopenmp at compilation and linking.</p>
+<p>Here is an example of building VE code written in C. To build a static-linked binary, execute as follows: </p>
+<div class="fragment"><div class="line">/opt/nec/ve/bin/ncc -c -o libomphello.o libomphello.c -fopenmp</div>
+<div class="line">/opt/nec/ve/bin/mk_veorun_static -o veorun_omphello libomphello.o -fopenmp</div>
+</div><!-- fragment --><p>To build a shared library, execute as follows: </p>
+<div class="fragment"><div class="line">/opt/nec/ve/bin/ncc -fpic -shared -o libomphello.so libomphello.c -fopenmp</div>
+</div><!-- fragment --><p> To build code written in Fortran, change the compiler to nfort.</p>
+<h2>How to get ftrace.out</h2>
+<p>To generate a ftrace.out, specify "-ftrace" option at compilation and linking VE code. A ftrace.out is generated on invocation of <a class="el" href="group__veoapi.html#gabf0ca7fb54ada334ed1a8c64fe749418" title="destroy a VE process ">veo_proc_destroy()</a> from VH main program. Here is an example of building VE code wiritten in C using or not using OpenMP.</p>
+<h3>How to build VE code not using OpenMP</h3>
+<p>To build a static-linked binary without OpenMP for ftrace, execute as follows:</p>
+<div class="fragment"><div class="line">$ /opt/nec/ve/bin/ncc -ftrace -c -o libvehello.o libvehello.c</div>
+<div class="line">$ /opt/nec/ve/bin/mk_veorun_static -ftrace -o veorun_static libvehello.o</div>
+</div><!-- fragment --><p>To build a shared library for ftrace, execute as follows:</p>
+<div class="fragment"><div class="line">$ /opt/nec/ve/bin/ncc -ftrace -shared -fpic -o libvehello.so libvehello.c -lveftrace_t</div>
+</div><!-- fragment --><p> To build code written in Fortran, change the compiler to nfort.</p>
+<h3>How to build VE code using OpenMP</h3>
+<p>To build a static-linked binary with OpenMP for ftrace, execute as follows:</p>
+<div class="fragment"><div class="line">$ /opt/nec/ve/bin/ncc -ftrace -c -o libomphello.o libomphello.c -fopenmp</div>
+<div class="line">$ /opt/nec/ve/bin/mk_veorun_static -ftrace -o veorun_omphello libomphello.o -fopenmp</div>
+</div><!-- fragment --><p>To build a shared library for ftrace, execute as follows:</p>
+<div class="fragment"><div class="line">$ /opt/nec/ve/bin/ncc -ftrace -shared -fpic -o libomphello.so libomphello.c -lveftrace_p -fopenmp </div>
+</div><!-- fragment --><p>To build code written in Fortran, change the compiler to nfort.</p>
+<h2>Relinking veorun for newer compilers</h2>
+<p>Relinking veorun for newer compilers is requred to dynamically load shared library using OpenMP written in Fortran.</p>
+<p>To link veorun which can loads shared library using OpenMP written in Fortran, execute as follows.</p>
+<div class="fragment"><div class="line">$ touch dummy.c</div>
+<div class="line">$ /opt/nec/ve/bin/ncc -o dummy.o -c dummy.c</div>
+<div class="line">$ /opt/nec/ve/bin/mk_veorun_static veorun dummy.o -fopenmp</div>
+</div><!-- fragment --><p>If you need to generate ftrace.out file, please add "-ftrace" option to mk_veorun_static.</p>
+<p>To use the newly created veorun, set the environment variable VEORUN_BIN.</p>
+<div class="fragment"><div class="line">export VEORUN_BIN=$(pwd)/veorun</div>
+</div><!-- fragment --><p>And execute a VEO program.</p>
+<h2>How to get log file</h2>
 <p>Create a file named .log4crc in your home directory. Copy the following lines to .log4crc. </p>
 <div class="fragment"><div class="line">&lt;?xml version=<span class="stringliteral">&quot;1.0&quot;</span> encoding=<span class="stringliteral">&quot;ISO-8859-1&quot;</span>?&gt;</div>
 <div class="line">&lt;!DOCTYPE log4c SYSTEM <span class="stringliteral">&quot;&quot;</span>&gt;</div>

@@ -8,6 +8,7 @@ var group__veoapi =
     [ "veo_load_library", "group__veoapi.html#ga3e17de75677bfb4bf8cf4b0a5a8031ab", null ],
     [ "veo_get_sym", "group__veoapi.html#gaca0242035575b6d811bedc53a942bc12", null ],
     [ "veo_context_open", "group__veoapi.html#ga8752c03fee0f7f200227a43cfd50f84c", null ],
+    [ "veo_context_open_with_attr", "group__veoapi.html#ga9f02a3ce6d7f8c6b8449772c95c473b1", null ],
     [ "veo_context_close", "group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea", null ],
     [ "veo_get_context_state", "group__veoapi.html#ga3cff2ea980a390d822a7e3f7b8c82485", null ],
     [ "veo_call_async", "group__veoapi.html#ga60ccb5a66f6a7af37b148a4da643fe74", null ],
@@ -35,5 +36,9 @@ var group__veoapi =
     [ "veo_args_set_stack", "group__veoapi.html#gaba4a2043f7ceb60989909c74a4e8670d", null ],
     [ "veo_args_clear", "group__veoapi.html#ga7ebe2a9759aea17a85bcf70deb3dce99", null ],
     [ "veo_args_free", "group__veoapi.html#ga3896858cc2ef3417c00843a3cd84b760", null ],
-    [ "veo_version_string", "group__veoapi.html#ga0f92cd12f86993eae601174632f60779", null ]
+    [ "veo_version_string", "group__veoapi.html#ga0f92cd12f86993eae601174632f60779", null ],
+    [ "veo_alloc_thr_ctxt_attr", "group__veoapi.html#gaf8f9b9ce664bb85eac759a2c1a8ca37d", null ],
+    [ "veo_free_thr_ctxt_attr", "group__veoapi.html#ga32497e90fa22db9e9f1161b7c86220b5", null ],
+    [ "veo_set_thr_ctxt_stacksize", "group__veoapi.html#gae3a7815b5156d0bc2823379c3b1adf75", null ],
+    [ "veo_get_thr_ctxt_stacksize", "group__veoapi.html#ga0f71e337255f666c805af1c3378af840", null ]
 ];

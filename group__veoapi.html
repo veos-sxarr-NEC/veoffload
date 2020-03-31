@@ -25,7 +25,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">VE Offloading
-   &#160;<span id="projectnumber">2.3.0</span>
+   &#160;<span id="projectnumber">2.4.1</span>
    </div>
   </td>
  </tr>
@@ -86,6 +86,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga8752c03fee0f7f200227a43cfd50f84c"><td class="memItemLeft" align="right" valign="top">veo_thr_ctxt *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga8752c03fee0f7f200227a43cfd50f84c">veo_context_open</a> (veo_proc_handle *proc)</td></tr>
 <tr class="memdesc:ga8752c03fee0f7f200227a43cfd50f84c"><td class="mdescLeft">&#160;</td><td class="mdescRight">open a VEO context  <a href="#ga8752c03fee0f7f200227a43cfd50f84c">More...</a><br/></td></tr>
 <tr class="separator:ga8752c03fee0f7f200227a43cfd50f84c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9f02a3ce6d7f8c6b8449772c95c473b1"><td class="memItemLeft" align="right" valign="top">veo_thr_ctxt *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga9f02a3ce6d7f8c6b8449772c95c473b1">veo_context_open_with_attr</a> (veo_proc_handle *proc, veo_thr_ctxt_attr *tca)</td></tr>
+<tr class="memdesc:ga9f02a3ce6d7f8c6b8449772c95c473b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">open a VEO context with attributes.  <a href="#ga9f02a3ce6d7f8c6b8449772c95c473b1">More...</a><br/></td></tr>
+<tr class="separator:ga9f02a3ce6d7f8c6b8449772c95c473b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaa427770089667c89ab2f5f0065e399ea"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#gaa427770089667c89ab2f5f0065e399ea">veo_context_close</a> (veo_thr_ctxt *ctx)</td></tr>
 <tr class="memdesc:gaa427770089667c89ab2f5f0065e399ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">close a VEO context  <a href="#gaa427770089667c89ab2f5f0065e399ea">More...</a><br/></td></tr>
 <tr class="separator:gaa427770089667c89ab2f5f0065e399ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -170,6 +173,18 @@ Functions</h2></td></tr>
 <tr class="memitem:ga0f92cd12f86993eae601174632f60779"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga0f92cd12f86993eae601174632f60779">veo_version_string</a> ()</td></tr>
 <tr class="memdesc:ga0f92cd12f86993eae601174632f60779"><td class="mdescLeft">&#160;</td><td class="mdescRight">VEO version.  <a href="#ga0f92cd12f86993eae601174632f60779">More...</a><br/></td></tr>
 <tr class="separator:ga0f92cd12f86993eae601174632f60779"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf8f9b9ce664bb85eac759a2c1a8ca37d"><td class="memItemLeft" align="right" valign="top">veo_thr_ctxt_attr *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#gaf8f9b9ce664bb85eac759a2c1a8ca37d">veo_alloc_thr_ctxt_attr</a> (void)</td></tr>
+<tr class="memdesc:gaf8f9b9ce664bb85eac759a2c1a8ca37d"><td class="mdescLeft">&#160;</td><td class="mdescRight">allocate and initialize VEO thread context attributes object (veo_thr_ctxt_attr).  <a href="#gaf8f9b9ce664bb85eac759a2c1a8ca37d">More...</a><br/></td></tr>
+<tr class="separator:gaf8f9b9ce664bb85eac759a2c1a8ca37d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga32497e90fa22db9e9f1161b7c86220b5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga32497e90fa22db9e9f1161b7c86220b5">veo_free_thr_ctxt_attr</a> (veo_thr_ctxt_attr *tca)</td></tr>
+<tr class="memdesc:ga32497e90fa22db9e9f1161b7c86220b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">free VEO thread context attributes object.  <a href="#ga32497e90fa22db9e9f1161b7c86220b5">More...</a><br/></td></tr>
+<tr class="separator:ga32497e90fa22db9e9f1161b7c86220b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae3a7815b5156d0bc2823379c3b1adf75"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#gae3a7815b5156d0bc2823379c3b1adf75">veo_set_thr_ctxt_stacksize</a> (veo_thr_ctxt_attr *tca, size_t stack_sz)</td></tr>
+<tr class="memdesc:gae3a7815b5156d0bc2823379c3b1adf75"><td class="mdescLeft">&#160;</td><td class="mdescRight">set stack size of VE thread which executes a VE function.  <a href="#gae3a7815b5156d0bc2823379c3b1adf75">More...</a><br/></td></tr>
+<tr class="separator:gae3a7815b5156d0bc2823379c3b1adf75"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0f71e337255f666c805af1c3378af840"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__veoapi.html#ga0f71e337255f666c805af1c3378af840">veo_get_thr_ctxt_stacksize</a> (veo_thr_ctxt_attr *tca, size_t *stack_sz)</td></tr>
+<tr class="memdesc:ga0f71e337255f666c805af1c3378af840"><td class="mdescLeft">&#160;</td><td class="mdescRight">get stack size of VE thread which executes a VE function.  <a href="#ga0f71e337255f666c805af1c3378af840">More...</a><br/></td></tr>
+<tr class="separator:ga0f71e337255f666c805af1c3378af840"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>VE Offloading API functions. </p>
@@ -233,6 +248,7 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramname">ossock</td><td>path to VE OS socket </td></tr>
     <tr><td class="paramname">vedev</td><td>path to VE device file </td></tr>
+    <tr><td class="paramname">binname</td><td>VE alternative veorun binary path </td></tr>
   </table>
   </dd>
 </dl>
@@ -460,10 +476,53 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>open a VEO context </p>
+<p>Create a new VEO context, a pseudo thread and VE thread for the context. All attributes which <a class="el" href="group__veoapi.html#ga9f02a3ce6d7f8c6b8449772c95c473b1" title="open a VEO context with attributes. ">veo_context_open_with_attr()</a> can specify have default value.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">proc</td><td>VEO process handle </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a pointer to VEO thread context upon success. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">NULL</td><td>failed to create a VEO context. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga9f02a3ce6d7f8c6b8449772c95c473b1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">veo_thr_ctxt* veo_context_open_with_attr </td>
+          <td>(</td>
+          <td class="paramtype">veo_proc_handle *&#160;</td>
+          <td class="paramname"><em>proc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">veo_thr_ctxt_attr *&#160;</td>
+          <td class="paramname"><em>tca</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>open a VEO context with attributes. </p>
 <p>Create a new VEO context, a pseudo thread and VE thread for the context.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">proc</td><td>VEO process handle </td></tr>
+    <tr><td class="paramname">tca</td><td>veo_thr_ctxt_attr object </td></tr>
   </table>
   </dd>
 </dl>
@@ -523,12 +582,19 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>get VEO context state </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ctx</td><td>a VEO context </td></tr>
+  </table>
+  </dd>
+</dl>
 <dl class="section return"><dt>Returns</dt><dd>the state of the VEO context state. </dd></dl>
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">VEO_STATE_RUNNING</td><td>VEO context is running. </td></tr>
     <tr><td class="paramname">VEO_STATE_SYSCALL</td><td>VEO context is handling a system call from VE. </td></tr>
-    <tr><td class="paramname">VEO_STATE_BLOCKED</td><td>VEO context is blocked.  VEO_STATE_EXIT VEO context exited. </td></tr>
+    <tr><td class="paramname">VEO_STATE_BLOCKED</td><td>VEO context is blocked. </td></tr>
+    <tr><td class="paramname">VEO_STATE_EXIT</td><td>VEO context exited. </td></tr>
   </table>
   </dd>
 </dl>
@@ -1679,6 +1745,136 @@ Functions</h2></td></tr>
 
 <p>VEO version. </p>
 <dl class="section return"><dt>Returns</dt><dd>pointer to VEO version string </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gaf8f9b9ce664bb85eac759a2c1a8ca37d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">veo_thr_ctxt_attr* veo_alloc_thr_ctxt_attr </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>allocate and initialize VEO thread context attributes object (veo_thr_ctxt_attr). </p>
+<dl class="section return"><dt>Returns</dt><dd>pointer to veo_thr_ctxt_attr </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">NULL</td><td>the allocation of veo_thr_ctxt_attr failed. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga32497e90fa22db9e9f1161b7c86220b5"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int veo_free_thr_ctxt_attr </td>
+          <td>(</td>
+          <td class="paramtype">veo_thr_ctxt_attr *&#160;</td>
+          <td class="paramname"><em>tca</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>free VEO thread context attributes object. </p>
+<pre class="fragment">   freeing a VEO thread context attributes object has no effect on VEO
+   thread contexts that were created using that object.
+</pre><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">tca</td><td>veo_thr_ctxt_attr object </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">0</td><td>VEO thread context attributes are successfully freed. </td></tr>
+    <tr><td class="paramname">-1</td><td>VEO thread context attributes de-allocation failed. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="gae3a7815b5156d0bc2823379c3b1adf75"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int veo_set_thr_ctxt_stacksize </td>
+          <td>(</td>
+          <td class="paramtype">veo_thr_ctxt_attr *&#160;</td>
+          <td class="paramname"><em>tca</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>stack_sz</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>set stack size of VE thread which executes a VE function. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">tca</td><td>veo_thr_ctxt_attr object </td></tr>
+    <tr><td class="paramname">stack_sz</td><td>stack size of VE thread</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 upon success; -1 upon failure. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga0f71e337255f666c805af1c3378af840"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int veo_get_thr_ctxt_stacksize </td>
+          <td>(</td>
+          <td class="paramtype">veo_thr_ctxt_attr *&#160;</td>
+          <td class="paramname"><em>tca</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>stack_sz</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>get stack size of VE thread which executes a VE function. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">tca</td><td>veo_thr_ctxt_attr object </td></tr>
+    <tr><td class="paramname">stack_sz</td><td>pointer to store stack size of VE thread.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>0 upon success; -1 upon failure. </dd></dl>
 
 </div>
 </div>
