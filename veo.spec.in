@@ -29,6 +29,11 @@ programming model like OpenMP and OpenACC.
 %define _prefix @prefix@
 %define _libdir @libdir@
 %define _localstatedir @localstatedir@
+%if 0%{?rhel} == 8
+%define	build_ldflags	"-Wl,-z,lazy"
+%define	build_cflags	"-g -O2"
+%define	build_cxxflags	"-g -O0"
+%endif
 
 %package devel
 Summary: Development package for VE Offloading Framework
@@ -48,12 +53,12 @@ Requires: %{name} = %{version}-%{release}
 
 %install
 %make_install
+sh -c "rm -f ${RPM_BUILD_ROOT}%{_libdir}/lib*.a \
+      ${RPM_BUILD_ROOT}%{_libdir}/lib*.la"
 
 %files
 %{_libdir}/libveo.so.*
 
 %files devel
 %{_includedir}/*
-%{_libdir}/libveo.a
-%{_libdir}/libveo.la
 %{_libdir}/libveo.so

@@ -402,7 +402,7 @@ INTEGER FUNCTION OMP_HELLO()
   INTEGER :: NTHREADS = 0
 !$OMP PARALLEL PRIVATE(TID, NTHREADS)
   TID = omp_get_thread_num()
-  write(*,*) "Hello, World! from thread = ", TID
+  WRITE(*,*) "Hello, World! from thread = ", TID
   IF ( TID == 0 ) THEN
     NTHREADS = omp_get_num_threads()
     OMP_HELLO = NTHREADS
@@ -467,6 +467,28 @@ $ /opt/nec/ve/bin/ncc -ftrace -shared -fpic -o libomphello.so libomphello.c -lve
 ~~~
 
 To build code written in Fortran, change the compiler to nfort.
+
+##Relinking veorun for newer compilers
+
+Relinking veorun for newer compilers is requred to dynamically load shared library using OpenMP written in Fortran.
+
+To link veorun which can loads shared library using OpenMP written in Fortran, execute as follows.
+
+~~~
+$ touch dummy.c
+$ /opt/nec/ve/bin/ncc -o dummy.o -c dummy.c
+$ /opt/nec/ve/bin/mk_veorun_static veorun dummy.o -fopenmp
+~~~
+
+If you need to generate ftrace.out file, please add "-ftrace" option to mk_veorun_static.
+
+To use the newly created veorun, set the environment variable VEORUN_BIN.
+
+~~~
+export VEORUN_BIN=$(pwd)/veorun
+~~~
+
+And execute a VEO program.
 
 
 ##How to get log file

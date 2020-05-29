@@ -299,9 +299,9 @@ int spawn_helper(ThreadContext *ctx, veos_handle *oshandle, const char *binname)
   file_name = basename(sfile_name.get());
   auto exe_name_buf = strdup(binname);
   auto exe_base_name = basename(exe_name_buf);
-  memset(ve_proc.exe_name, '\0', ACCT_COMM + 1);
-  strncpy(ve_proc.exe_name, exe_base_name, ACCT_COMM);
-  strncpy(ve_proc.sfile_name, file_name, S_FILE_LEN); 
+  memset(ve_proc.exe_name, '\0', ACCT_COMM);
+  strncpy(ve_proc.exe_name, exe_base_name, ACCT_COMM - 1);
+  strncpy(ve_proc.sfile_name, file_name, S_FILE_LEN - 1);
   free(exe_name_buf);
 
   int retval = pseudo_psm_send_new_ve_process(oshandle->veos_sock_fd, ve_proc);
@@ -500,10 +500,14 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
     throw VEOException("Failed to receive data from VE");
   }
   VEO_ASSERT(this->funcs.version >= VEORUN_VERSION2);
-  if (this->funcs.version == VEORUN_VERSION3) {
-    funcs_sz = sizeof(struct veo__helper_functions_ver3);
-  } else {
+  if (this->funcs.version == VEORUN_VERSION2) {
     funcs_sz =  sizeof(struct veo__helper_functions_ver2);
+  } else if (this->funcs.version == VEORUN_VERSION3) {
+    funcs_sz = sizeof(struct veo__helper_functions_ver3);
+  } else if (this->funcs.version == VEORUN_VERSION4) {
+    funcs_sz = sizeof(struct veo__helper_functions_ver4);
+  } else {
+    throw VEOException("Invalid VEORUN_VERSION");
   }
   rv = ve_recv_data(os_handle, funcs_addr, funcs_sz, &this->funcs);
   if (rv != 0) {
@@ -519,9 +523,12 @@ ProcHandle::ProcHandle(const char *ossock, const char *vedev,
   DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, create_thread);
   DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, call_func);
   DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs, exit);
-  if (this->funcs.version == VEORUN_VERSION3)
+  if (this->funcs.version >= VEORUN_VERSION3)
     DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs,
                        create_thread_with_attr);
+  if (this->funcs.version >= VEORUN_VERSION4)
+    DEBUG_PRINT_HELPER(this->main_thread.get(), this->funcs,
+		       load_library_err);
   // create worker
   CallArgs args_create_thread;
   args_create_thread.set(0, -1);// FIXME: get the number of cores on VE
@@ -592,6 +599,11 @@ uint64_t ProcHandle::loadLibrary(const char *libname)
   uint64_t handle = doOnContext(this->worker.get(),
                                 this->funcs.load_library, args);
   VEO_TRACE(this->worker.get(), "handle = %#lx", handle);
+  if ((handle == 0) && (this->getVeorunVersion() >= VEORUN_VERSION4)) {
+    char err_msg[ERR_MSG_LEN] = {'\0'};
+      if (this->loadLibraryError(err_msg, ERR_MSG_LEN) == 0)
+        VEO_ERROR(this->worker.get(), "%s : %s", __func__, err_msg);
+  }
   return handle;
 }
 
@@ -820,5 +832,56 @@ int ProcHandle::writeMem(uint64_t dst, const void *src, size_t size)
   int rv = this->worker->callWaitResult(id, &ret);
   VEO_ASSERT(rv == VEO_COMMAND_OK);
   return static_cast<int>(ret);
+}
+
+/**
+ * @brief get the error that occurred from loadLibrary().
+ * @param[out] ret_buff buffer to store the error.
+ * @param size size of ret_buff
+ * @return zero upon success; -1 upon failure
+ */
+int ProcHandle::loadLibraryError(char *ret_buff, size_t size)
+{
+  uint64_t buff;
+  int64_t rv;
+  char err_msg[ERR_MSG_LEN] = {'\0'};
+  CallArgs args;
+
+  try {
+    buff = this->allocBuff(ERR_MSG_LEN);
+  } catch (VEOException &e) {
+    VEO_ERROR(nullptr,
+	      "Error Detected on VE Buffer allocation procedure : %s", e.what());
+    return -1;
+  }
+  if (buff == 0)
+    return -1;
+
+  VEO_DEBUG(nullptr, "VE Buffer = %p", (void *)buff);
+
+  args.set(0, buff);
+  args.set(1, ERR_MSG_LEN);
+  try {
+    rv = doOnContext(this->worker.get(),
+			   this->funcs.load_library_err, args);
+  } catch (VEOException &e) {
+    VEO_ERROR(nullptr,
+	      "Exception Detected in calling load_library_err : %s", e.what());
+  }
+  if (rv < 0) {
+    VEO_ERROR(nullptr, "load_library_err failed, rv = %ld", rv);
+    return -1;
+  }
+
+  rv = this->readMem((void *)err_msg, buff, ERR_MSG_LEN);
+  if (rv != 0) {
+    VEO_ERROR(nullptr, "readMem failed, rv = %ld", rv);
+    return -1;
+  }
+
+  this->freeBuff(buff);
+  memcpy(ret_buff, err_msg, (size < ERR_MSG_LEN) ? size : ERR_MSG_LEN);
+
+  return 0;
 }
 } // namespace veo

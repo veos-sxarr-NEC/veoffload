@@ -14,6 +14,9 @@
 #include <veorun.h>
 #include "ThreadContext.hpp"
 #include "VEOException.hpp"
+#include <limits.h>
+
+#define ERR_MSG_LEN (VEO_SYMNAME_LEN_MAX * 2)
 
 namespace std {
     template <>
@@ -37,7 +40,7 @@ private:
   std::mutex main_mutex;//!< acquire while using main_thread
   std::unique_ptr<ThreadContext> main_thread;
   std::unique_ptr<ThreadContext> worker;
-  struct veo__helper_functions_ver3 funcs;
+  struct veo__helper_functions_ver4 funcs;
   int num_child_threads;
   int ve_number;
 
@@ -58,6 +61,7 @@ public:
   ~ProcHandle();
 
   uint64_t loadLibrary(const char *);
+  int loadLibraryError(char *, size_t);
   uint64_t getSym(const uint64_t, const char *);
 
   uint64_t allocBuff(const size_t);
