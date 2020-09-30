@@ -56,36 +56,26 @@ $(document).ready(function(){initNavTree('md_GettingStarted.html','');});
 <div class="contents">
 <div class="textblock"><p>VE Offloading framework (VEO) is a framework to provide accelerator-style programming on Vector Engine (VE).</p>
 <h2>Introduction</h2>
-<p>Recently the accelerator programming model has become popular due to the wide usage of GPGPU and the increasing use of Xeon Phi processors. The accelerator programming model executes parallelized and/or vectorized numeric code such as matrix operations on accelerators and a main code controlling accelerators and performing I/O on a host. This programming model explicitly coded into parallel frameworks such as OpenMP 4 (device construct) and OpenACC, and into lower level APIs such as OpenCL and CUDA.</p>
-<p>SX-Aurora TSUBASA provides VE Offloading framework (VEO) for the accelerator programming model and enables to develop a program using both VEs and VH computing resources.</p>
+<p>SX-Aurora TSUBASA provides VE Offloading framework (VEO) for the accelerator programming model. The accelerator programming model executes parallelized and/or vectorized numeric code such as matrix operations on accelerators and a main code controlling accelerators and performing I/O on a host.</p>
+<p>The Alternative VE Offloading framework (AVEO) became an official implementation of VEO at the end of Sep. 2020. It is a faster and much lower latency replacement to the previous VEO implementation which brings multi-VE support, simultaneous debugging of VE and VH side, API extensions. The document of AVEO is available at the below URL.</p>
+<p><a href="https://veos-sxarr-nec.github.io/aveo/index.html">https://veos-sxarr-nec.github.io/aveo/index.html</a></p>
+<p>You can migrate to AVEO from the previous VEO implementation by installing the AVEO's packages and re-linking your program with AVEO without modification of makefiles.</p>
+<p>NEC supports the previous VEO implementation until the end of Mar. 2021.</p>
+<p>This page has information of the previous VEO implementation.</p>
+<h2>Installation</h2>
+<p>To run programs, please install veoffload veoffload-veorun and the runtime packages of the compiler (2.2.2 or later).</p>
+<p>To install the packages to run programs by yum, execute the following command as root:</p>
+<div class="fragment"><div class="line"><span class="preprocessor"># yum install veoffload veoffload-veorun</span></div>
+</div><!-- fragment --><p> You need not uninstall veoffload-aveo and veoffload-aveorun which are the packages of AVEO. So, you can execute your program linked with AVEO.</p>
+<h3>Installing development package</h3>
+<p>To develop programs, veoffload-devel and veoffload-veorun-devel and the development packages of the compiler (2.2.2 or later) are also required. These packages conflict with veoffload-aveo-devel and veoffload-aveorun-devel. So, please uninstall veoffload-aveo-devel and veoffload-aveorun-devel.</p>
+<p>To uninstall the conflicting packages by yum, execute the following command as root:</p>
+<div class="fragment"><div class="line"><span class="preprocessor"># yum remove veoffload-aveo-devel veoffload-aveorun-devel</span></div>
+</div><!-- fragment --><p>To install the packages to develop programs by yum, execute the following command as root:</p>
+<div class="fragment"><div class="line"><span class="preprocessor"># yum install --setopt=obsoletes=0 veoffload-devel veoffload-veorun-devel</span></div>
+</div><!-- fragment --><p> Then, you can link your program with the previous VEO implementation If you want to link your program with AVEO. please install its packages into another machine.</p>
 <h2>Hello World</h2>
 <p>First, let's try a "Hello, World!" program on VE.</p>
-<h3>Install required packages</h3>
-<p>To run programs using VEO, please install veoffload-veorun, veoffload and runtime packages of the compiler.</p>
-<p>To develop programs using VEO, veoffload-veorun-devel, veoffload-devel and development packages of compiler are also required.</p>
-<p>To install the packages to run VEO programs by yum, execute the following command as root:</p>
-<div class="fragment"><div class="line"><span class="preprocessor"># yum install veoffload</span></div>
-</div><!-- fragment --><p>veoffload-veorun is automatically installed by dependency.</p>
-<p>To install the packages to develop VEO programs by yum, execute the following command as root:</p>
-<div class="fragment"><div class="line"><span class="preprocessor"># yum install veoffload-veorun-devel veoffload-devel</span></div>
-</div><!-- fragment --><p>The following runtime package of the compiler are required to run VEO programs.</p>
-<ul>
-<li>nec-nc++-shared-2.3.0-2.3.0-1 or later</li>
-<li>nec-nc++-shared-inst-2-2.3.0-1.noarch or later</li>
-<li>nec-nfort-shared-2.3.0-2.3.0-1.x86_64 or later</li>
-<li>nec-nfort-shared-inst-2-2.3.0-1.noarch or later</li>
-<li>nec-nfort-runtime-2.0.0-1.x86_64 or later</li>
-<li>binutils-ve-2.26-2.2.x86_64.rpm or later</li>
-</ul>
-<p>The following development packages of the compiler are also required to create a shared object for Fortran or C/C++ programs.</p>
-<ul>
-<li>nec-nc++-2.3.0-2.3.0-1.x86_64 or later</li>
-<li>nec-nc++-inst-2.3.0-1.noarch or later</li>
-<li>nec-nc++-shared-devel-2.3.0-2.3.0-1.x86_64 or later</li>
-<li>nec-nfort-2.3.0-2.3.0-1.x86_64 or later</li>
-<li>nec-nfort-inst-2.3.0-1.noarch or later</li>
-<li>nec-nfort-shared-devel-2.3.0-2.3.0-1.x86_64 or later</li>
-</ul>
 <h3>VE Code</h3>
 <p>Code to run on VE is shown below. Standard C functions are available, hence, you can use printf(3).</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
